@@ -3,6 +3,7 @@ import { useDispatch } from 'react-redux';
 import { IconLoader2 } from '@tabler/icons';
 import { updateCollectionGitData } from 'providers/ReduxStore/slices/collections';
 import toast from 'react-hot-toast';
+import Sidebar from 'components/Sidebar';
 import StyledWrapper from './StyledWrapper';
 
 // Subcomponents
@@ -14,6 +15,7 @@ import CommitsPanel from './CommitsPanel';
 import StashesPanel from './StashesPanel';
 import RemotesPanel from './RemotesPanel';
 import OverviewPanel from './OverviewPanel';
+import CreateBranchModal from './CreateBranchModal';
 
 const GitUI = ({ collection }) => {
   const dispatch = useDispatch();
@@ -33,6 +35,7 @@ const GitUI = ({ collection }) => {
   const [activeView, setActiveView] = useState('overview');
   const [stashes, setStashes] = useState([]);
   const [remotes, setRemotes] = useState([]);
+  const [showCreateBranchModal, setShowCreateBranchModal] = useState(false);
 
   const [isVisualDiff, setIsVisualDiff] = useState(false);
   const [visualDiffData, setVisualDiffData] = useState(null);
@@ -345,12 +348,33 @@ const GitUI = ({ collection }) => {
     }
   };
 
+  const handleCreateBranch = async (branchName) => {
+    if (!branchName) return;
+    try {
+      setIsPerformingGitAction(true);
+      await window.ipcRenderer.invoke('renderer:git:checkout-branch', {
+        collectionPath: collection.pathname,
+        branchName,
+        processUid: 'git-checkout',
+        shouldCreate: true
+      });
+      toast.success(`Created and switched to branch ${branchName}`);
+      await refreshGitStatus();
+      setSelectedFile(null);
+      setShowCreateBranchModal(false);
+    } catch (err) {
+      toast.error(err.message || 'Failed to create branch');
+    } finally {
+      setIsPerformingGitAction(false);
+    }
+  };
+
   const stagedCount = changedFiles.staged?.length || 0;
 
   return (
     <StyledWrapper>
       {/* Git Sidebar Panel */}
-      <div className="git-sidebar">
+      <Sidebar>
         <CommitArea
           commitMessage={commitMessage}
           setCommitMessage={setCommitMessage}
@@ -379,8 +403,9 @@ const GitUI = ({ collection }) => {
           setActiveView={setActiveView}
           isPerformingGitAction={isPerformingGitAction}
           handleBranchChange={handleBranchChange}
+          onCreateBranchClick={() => setShowCreateBranchModal(true)}
         />
-      </div>
+      </Sidebar>
 
       {/* Git Main View */}
       <div className="git-main-view">
@@ -430,6 +455,12 @@ const GitUI = ({ collection }) => {
           />
         )}
       </div>
+      {showCreateBranchModal && (
+        <CreateBranchModal
+          onClose={() => setShowCreateBranchModal(false)}
+          onSubmit={handleCreateBranch}
+        />
+      )}
     </StyledWrapper>
   );
 };

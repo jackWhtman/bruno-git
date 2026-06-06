@@ -12,7 +12,8 @@ const SidebarLinks = ({
   activeView,
   setActiveView,
   isPerformingGitAction,
-  handleBranchChange
+  handleBranchChange,
+  onCreateBranchClick
 }) => {
   const { theme } = useTheme();
 
@@ -68,11 +69,22 @@ const SidebarLinks = ({
       {gitData.branches && (
         <div className="branch-select-section" style={{ width: '100%' }}>
           <MenuDropdown
-            items={gitData.branches.map((b) => ({
-              id: b,
-              label: b,
-              onClick: () => handleBranchChange(b)
-            }))}
+            items={[
+              ...gitData.branches.map((b) => ({
+                id: b,
+                label: b,
+                onClick: () => handleBranchChange(b)
+              })),
+              {
+                type: 'divider',
+                id: 'create-branch-divider'
+              },
+              {
+                id: 'create-branch',
+                label: 'Create New Branch...',
+                onClick: onCreateBranchClick
+              }
+            ]}
             selectedItemId={gitData.currentGitBranch}
             placement="bottom-start"
             className="w-full"

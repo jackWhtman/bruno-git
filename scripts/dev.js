@@ -47,11 +47,12 @@ webProcess.stdout.on('data', (data) => {
 
   // Try to detect the port from rsbuild output
   if (!detectedPort) {
-    const match = output.match(portRegex);
+    const cleanOutput = output.replace(/\x1B\[[0-9;]*[a-zA-Z]/g, '');
+    const match = cleanOutput.match(portRegex);
     if (match) {
       detectedPort = match[1];
       log.success(`Detected dev server on port ${colors.bright}${detectedPort}${colors.reset}`);
-      startElectron(detectedPort);
+      setTimeout(() => startElectron(detectedPort), 8000);
     }
   }
 });

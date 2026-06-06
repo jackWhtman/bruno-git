@@ -10,15 +10,6 @@ const StyledWrapper = styled.div`
   background-color: ${(props) => props.theme.bg};
   color: ${(props) => props.theme.text};
 
-  .git-sidebar {
-    width: 280px;
-    display: flex;
-    flex-direction: column;
-    flex-shrink: 0;
-    background-color: ${(props) => props.theme.background.mantle};
-    border-right: 1px solid ${(props) => props.theme.border.border1};
-  }
-
   .git-main-view {
     flex: 1;
     display: flex;

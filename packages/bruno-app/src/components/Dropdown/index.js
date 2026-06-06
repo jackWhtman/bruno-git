@@ -2,7 +2,7 @@ import React from 'react';
 import Tippy from '@tippyjs/react';
 import StyledWrapper from './StyledWrapper';
 
-const Dropdown = ({ icon, children, onCreate, placement, transparent, visible, appendTo, onMouseEnter, onMouseLeave, ...props }) => {
+const Dropdown = ({ icon, children, onCreate, placement, transparent, visible, appendTo, onMouseEnter, onMouseLeave, className, ...props }) => {
   // When in controlled mode (visible prop is provided), don't use trigger prop
   const tippyProps = visible !== undefined
     ? { ...props, visible, interactive: true, appendTo: appendTo || 'parent' }
@@ -12,7 +12,7 @@ const Dropdown = ({ icon, children, onCreate, placement, transparent, visible, a
     <Tippy
       render={(attrs) => (
         <StyledWrapper
-          className="tippy-box dropdown"
+          className={`tippy-box dropdown ${className || ''}`.trim()}
           transparent={transparent}
           tabIndex={-1}
           onMouseEnter={onMouseEnter}

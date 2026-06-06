@@ -23,7 +23,7 @@ const SIDEBAR_SECTIONS = [
   }
 ];
 
-const Sidebar = () => {
+const Sidebar = ({ children }) => {
   const leftSidebarWidth = useSelector((state) => state.app.leftSidebarWidth);
   const sidebarCollapsed = useSelector((state) => state.app.sidebarCollapsed);
   const [asideWidth, setAsideWidth] = useState(leftSidebarWidth);
@@ -105,9 +105,11 @@ const Sidebar = () => {
             <div className="flex flex-col w-full" style={{ width: asideWidth }}>
               <div className="flex flex-col flex-grow sidebar-sections-container" style={{ minHeight: 0, overflow: 'hidden' }}>
                 <div className="sidebar-sections flex flex-col flex-1">
-                  <SidebarContent
-                    sections={SIDEBAR_SECTIONS}
-                  />
+                  {children ? children : (
+                    <SidebarContent
+                      sections={SIDEBAR_SECTIONS}
+                    />
+                  )}
                 </div>
               </div>
             </div>
