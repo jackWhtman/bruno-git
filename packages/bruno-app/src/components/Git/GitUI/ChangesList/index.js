@@ -51,7 +51,7 @@ const ChangesList = ({
                       handleUnstageFile(file.path);
                     }}
                   >
-                    <IconMinus size={14} />
+                    <IconMinus size={12} />
                   </ActionIcon>
                 </div>
                 <span className="status-badge added">A</span>
@@ -73,13 +73,13 @@ const ChangesList = ({
               label="Discard all changes"
               onClick={handleDiscardAll}
             >
-              <IconCornerUpLeft size={13} />
+              <IconCornerUpLeft size={12} />
             </ActionIcon>
             <ActionIcon
               label="Stage all changes"
               onClick={handleStageAll}
             >
-              <IconPlus size={14} />
+              <IconPlus size={12} />
             </ActionIcon>
           </div>
         )}
@@ -106,7 +106,7 @@ const ChangesList = ({
                     handleDiscardFile(file.path);
                   }}
                 >
-                  <IconCornerUpLeft size={13} />
+                  <IconCornerUpLeft size={12} />
                 </ActionIcon>
                 <ActionIcon
                   label="Stage changes"
@@ -115,7 +115,7 @@ const ChangesList = ({
                     handleStageFile(file.path);
                   }}
                 >
-                  <IconPlus size={14} />
+                  <IconPlus size={12} />
                 </ActionIcon>
               </div>
               <span className={`status-badge ${

@@ -10,15 +10,15 @@ const StyledWrapper = styled.div`
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.5rem 1rem;
-    font-size: ${(props) => props.theme.font.size.sm};
-    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    font-size: ${(props) => props.theme.font.size.xs};
+    font-weight: 400;
     background-color: ${(props) => props.theme.background.surface0};
     color: ${(props) => props.theme.text};
   }
 
   .count-badge {
-    padding: 2px 6px;
+    padding: 2px 8px;
     border-radius: 9999px;
     font-size: ${(props) => props.theme.font.size.xs};
     font-weight: 500;

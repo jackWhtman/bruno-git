@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { IconLoader2 } from '@tabler/icons';
+import { IconLoader2, IconArrowUp, IconArrowDown, IconGitBranch, IconChevronDown } from '@tabler/icons';
 import { updateCollectionGitData } from 'providers/ReduxStore/slices/collections';
 import toast from 'react-hot-toast';
 import Sidebar from 'components/Sidebar';
+import SidebarSection from 'components/Sidebar/SidebarSection';
+import MenuDropdown from 'ui/MenuDropdown';
+import Button from 'ui/Button';
+import { useTheme } from 'providers/Theme';
 import StyledWrapper from './StyledWrapper';
 
 // Subcomponents
@@ -19,6 +23,7 @@ import CreateBranchModal from './CreateBranchModal';
 
 const GitUI = ({ collection }) => {
   const dispatch = useDispatch();
+  const { theme } = useTheme();
 
   const [isLoading, setIsLoading] = useState(false);
   const [gitData, setGitData] = useState({});
@@ -374,37 +379,106 @@ const GitUI = ({ collection }) => {
   return (
     <StyledWrapper>
       {/* Git Sidebar Panel */}
-      <Sidebar>
-        <CommitArea
-          commitMessage={commitMessage}
-          setCommitMessage={setCommitMessage}
-          stagedCount={stagedCount}
-          isPerformingGitAction={isPerformingGitAction}
-          handleCommit={handleCommit}
-        />
+      <Sidebar defaultExpanded={['git-changes']}>
+        <div className="git-sidebar-container">
+          <CommitArea
+            commitMessage={commitMessage}
+            setCommitMessage={setCommitMessage}
+            stagedCount={stagedCount}
+            isPerformingGitAction={isPerformingGitAction}
+            handleCommit={handleCommit}
+          />
 
-        <ChangesList
-          changedFiles={changedFiles}
-          selectedFile={selectedFile}
-          setSelectedFile={setSelectedFile}
-          handleUnstageAll={handleUnstageAll}
-          handleUnstageFile={handleUnstageFile}
-          handleDiscardAll={handleDiscardAll}
-          handleDiscardFile={handleDiscardFile}
-          handleStageAll={handleStageAll}
-          handleStageFile={handleStageFile}
-        />
+          <div className="git-sidebar-scrollable">
+            <SidebarSection
+              id="git-changes"
+              title={(
+                <div className="flex items-center gap-1.5">
+                  <span>Changes</span>
+                  <span className="count-badge">{(changedFiles.staged?.length || 0) + (changedFiles.unstaged?.length || 0)}</span>
+                </div>
+              )}
+            >
+              <ChangesList
+                changedFiles={changedFiles}
+                selectedFile={selectedFile}
+                setSelectedFile={setSelectedFile}
+                handleUnstageAll={handleUnstageAll}
+                handleUnstageFile={handleUnstageFile}
+                handleDiscardAll={handleDiscardAll}
+                handleDiscardFile={handleDiscardFile}
+                handleStageAll={handleStageAll}
+                handleStageFile={handleStageFile}
+              />
+            </SidebarSection>
 
-        <SidebarLinks
-          gitData={gitData}
-          selectedFile={selectedFile}
-          setSelectedFile={setSelectedFile}
-          activeView={activeView}
-          setActiveView={setActiveView}
-          isPerformingGitAction={isPerformingGitAction}
-          handleBranchChange={handleBranchChange}
-          onCreateBranchClick={() => setShowCreateBranchModal(true)}
-        />
+            <SidebarSection
+              id="git-links"
+              title="Links"
+            >
+              <SidebarLinks
+                selectedFile={selectedFile}
+                setSelectedFile={setSelectedFile}
+                activeView={activeView}
+                setActiveView={setActiveView}
+              />
+            </SidebarSection>
+          </div>
+
+          {gitData.branches && (
+            <div className="git-branch-bottom">
+              <div className="git-branch-dropdown-container">
+                <MenuDropdown
+                  items={[
+                    ...gitData.branches.map((b) => ({
+                      id: b,
+                      label: b,
+                      onClick: () => handleBranchChange(b)
+                    })),
+                    {
+                      type: 'divider',
+                      id: 'create-branch-divider'
+                    },
+                    {
+                      id: 'create-branch',
+                      label: 'Create New Branch...',
+                      onClick: () => setShowCreateBranchModal(true)
+                    }
+                  ]}
+                  selectedItemId={gitData.currentGitBranch}
+                  placement="top-start"
+                  className="w-full"
+                >
+                  <Button
+                    variant="outline"
+                    color="secondary"
+                    size="xs"
+                    fullWidth
+                    disabled={isPerformingGitAction}
+                    style={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      <IconGitBranch size={14} style={{ color: theme.brand }} />
+                      <span className="truncate">{gitData.currentGitBranch || 'Select Branch'}</span>
+                    </div>
+                    <IconChevronDown size={14} className="text-neutral-400" />
+                  </Button>
+                </MenuDropdown>
+              </div>
+
+              <div className="git-ahead-behind-indicators">
+                <div className={`git-indicator-item ahead ${aheadBehind.ahead > 0 ? 'active' : 'zero'}`} title={`${aheadBehind.ahead} commits ahead`}>
+                  <IconArrowUp size={14} />
+                  <span>{aheadBehind.ahead || 0}</span>
+                </div>
+                <div className={`git-indicator-item behind ${aheadBehind.behind > 0 ? 'active' : 'zero'}`} title={`${aheadBehind.behind} commits behind`}>
+                  <IconArrowDown size={14} />
+                  <span>{aheadBehind.behind || 0}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </Sidebar>
 
       {/* Git Main View */}

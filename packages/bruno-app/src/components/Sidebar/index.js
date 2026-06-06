@@ -1,29 +1,33 @@
-import { SidebarAccordionProvider } from './SidebarAccordionContext';
-import SidebarContent from './SidebarContent';
-import StyledWrapper from './StyledWrapper';
+import { SidebarAccordionProvider } from "./SidebarAccordionContext";
+import SidebarContent from "./SidebarContent";
+import StyledWrapper from "./StyledWrapper";
 
-import { useState, useEffect, useRef } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { updateLeftSidebarWidth, updateIsDragging, toggleSidebarSearch } from 'providers/ReduxStore/slices/app';
-import CollectionsSection from './Sections/CollectionsSection/index';
-import ApiSpecsSection from './Sections/ApiSpecsSection/index';
-import useKeybinding from 'hooks/useKeybinding';
+import { useState, useEffect, useRef } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  updateLeftSidebarWidth,
+  updateIsDragging,
+  toggleSidebarSearch,
+} from "providers/ReduxStore/slices/app";
+import CollectionsSection from "./Sections/CollectionsSection/index";
+import ApiSpecsSection from "./Sections/ApiSpecsSection/index";
+import useKeybinding from "hooks/useKeybinding";
 
 const MIN_LEFT_SIDEBAR_WIDTH = 220;
 const MAX_LEFT_SIDEBAR_WIDTH = 600;
 
 const SIDEBAR_SECTIONS = [
   {
-    id: 'collections',
-    component: CollectionsSection
+    id: "collections",
+    component: CollectionsSection,
   },
   {
-    id: 'api-specs',
-    component: ApiSpecsSection
-  }
+    id: "api-specs",
+    component: ApiSpecsSection,
+  },
 ];
 
-const Sidebar = ({ children }) => {
+const Sidebar = ({ children, defaultExpanded = ["collections"] }) => {
   const leftSidebarWidth = useSelector((state) => state.app.leftSidebarWidth);
   const sidebarCollapsed = useSelector((state) => state.app.sidebarCollapsed);
   const [asideWidth, setAsideWidth] = useState(leftSidebarWidth);
@@ -33,9 +37,9 @@ const Sidebar = ({ children }) => {
   const [dragging, setDragging] = useState(false);
 
   // Sidebar search
-  useKeybinding('sidebarSearch', (e) => {
+  useKeybinding("sidebarSearch", (e) => {
     const target = e?.target || document.activeElement;
-    if (target?.closest?.('.CodeMirror')) return; // let editor's native `Find` handle it
+    if (target?.closest?.(".CodeMirror")) return; // let editor's native `Find` handle it
     dispatch(toggleSidebarSearch());
     return false;
   });
@@ -48,7 +52,11 @@ const Sidebar = ({ children }) => {
   const handleMouseMove = (e) => {
     if (!dragging || sidebarCollapsed) return;
     e.preventDefault();
-    const nextWidth = clamp(e.clientX + 2, MIN_LEFT_SIDEBAR_WIDTH, MAX_LEFT_SIDEBAR_WIDTH);
+    const nextWidth = clamp(
+      e.clientX + 2,
+      MIN_LEFT_SIDEBAR_WIDTH,
+      MAX_LEFT_SIDEBAR_WIDTH,
+    );
     if (Math.abs(nextWidth - lastWidthRef.current) < 3) return;
     lastWidthRef.current = nextWidth;
     setAsideWidth(nextWidth);
@@ -60,13 +68,13 @@ const Sidebar = ({ children }) => {
       setDragging(false);
       dispatch(
         updateLeftSidebarWidth({
-          leftSidebarWidth: asideWidth
-        })
+          leftSidebarWidth: asideWidth,
+        }),
       );
       dispatch(
         updateIsDragging({
-          isDragging: false
-        })
+          isDragging: false,
+        }),
       );
     }
   };
@@ -78,18 +86,18 @@ const Sidebar = ({ children }) => {
     setDragging(true);
     dispatch(
       updateIsDragging({
-        isDragging: true
-      })
+        isDragging: true,
+      }),
     );
   };
 
   useEffect(() => {
-    document.addEventListener('mouseup', handleMouseUp);
-    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+    document.addEventListener("mousemove", handleMouseMove);
 
     return () => {
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+      document.removeEventListener("mousemove", handleMouseMove);
     };
   }, [dragging, asideWidth]);
 
@@ -98,17 +106,26 @@ const Sidebar = ({ children }) => {
   }, [leftSidebarWidth]);
 
   return (
-    <SidebarAccordionProvider defaultExpanded={['collections']}>
+    <SidebarAccordionProvider defaultExpanded={defaultExpanded}>
       <StyledWrapper className="flex relative h-full">
-        <aside className="sidebar" style={{ width: currentWidth, transition: dragging ? 'none' : 'width 0.2s ease-in-out' }}>
+        <aside
+          className="sidebar"
+          style={{
+            width: currentWidth,
+            transition: dragging ? "none" : "width 0.2s ease-in-out",
+          }}
+        >
           <div className="flex flex-row h-full w-full">
             <div className="flex flex-col w-full" style={{ width: asideWidth }}>
-              <div className="flex flex-col flex-grow sidebar-sections-container" style={{ minHeight: 0, overflow: 'hidden' }}>
+              <div
+                className="flex flex-col flex-grow sidebar-sections-container"
+                style={{ minHeight: 0, overflow: "hidden" }}
+              >
                 <div className="sidebar-sections flex flex-col flex-1">
-                  {children ? children : (
-                    <SidebarContent
-                      sections={SIDEBAR_SECTIONS}
-                    />
+                  {children ? (
+                    children
+                  ) : (
+                    <SidebarContent sections={SIDEBAR_SECTIONS} />
                   )}
                 </div>
               </div>
@@ -117,7 +134,10 @@ const Sidebar = ({ children }) => {
         </aside>
 
         {!sidebarCollapsed && (
-          <div className="absolute sidebar-drag-handle h-full" onMouseDown={handleDragbarMouseDown}>
+          <div
+            className="absolute sidebar-drag-handle h-full"
+            onMouseDown={handleDragbarMouseDown}
+          >
             <div className="drag-request-border" />
           </div>
         )}

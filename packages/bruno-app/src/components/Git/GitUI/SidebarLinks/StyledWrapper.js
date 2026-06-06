@@ -1,12 +1,11 @@
 import styled from 'styled-components';
 
 const StyledWrapper = styled.div`
-  padding: 1rem;
+  padding: 0.5rem 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  background-color: ${(props) => props.theme.background.crust};
-  border-top: 1px solid ${(props) => props.theme.border.border1};
+  gap: 0.25rem;
+  background-color: transparent;
 
   .link-item {
     display: flex;
@@ -28,15 +27,6 @@ const StyledWrapper = styled.div`
       font-weight: 500;
       opacity: 1;
     }
-  }
-
-  .branch-select-section {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: ${(props) => props.theme.font.size.sm};
-    padding-top: 0.5rem;
-    border-top: 1px solid ${(props) => props.theme.border.border1};
   }
 `;
 
