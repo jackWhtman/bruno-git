@@ -12,12 +12,20 @@ import {
   IconX,
   IconCheck,
   IconFolder,
-  IconUpload
+  IconUpload,
+  IconBrandGit
 } from '@tabler/icons';
 import OpenAPISyncIcon from 'components/Icons/OpenAPISync';
-import { switchWorkspace, renameWorkspaceAction, exportWorkspaceAction, confirmWorkspaceCreation, cancelWorkspaceCreation } from 'providers/ReduxStore/slices/workspaces/actions';
+import {
+  switchWorkspace,
+  renameWorkspaceAction,
+  exportWorkspaceAction,
+  confirmWorkspaceCreation,
+  cancelWorkspaceCreation
+} from 'providers/ReduxStore/slices/workspaces/actions';
 import { updateWorkspace } from 'providers/ReduxStore/slices/workspaces';
 import { showInFolder } from 'providers/ReduxStore/slices/collections/actions';
+import { updateCollectionGitData } from 'providers/ReduxStore/slices/collections';
 import { addTab, focusTab } from 'providers/ReduxStore/slices/tabs';
 import { uuid } from 'utils/common';
 import toast from 'react-hot-toast';
@@ -29,6 +37,7 @@ import EnvironmentSelector from 'components/Environments/EnvironmentSelector';
 import ToolHint from 'components/ToolHint';
 import JsSandboxMode from 'components/SecuritySettings/JsSandboxMode';
 import ActionIcon from 'ui/ActionIcon';
+import Button from 'ui/Button';
 import { getRevealInFolderLabel } from 'utils/common/platform';
 import { normalizePath } from 'utils/common/path';
 import classNames from 'classnames';
@@ -40,21 +49,61 @@ import StatusBadge from 'ui/StatusBadge/index';
 const CollectionHeader = ({ collection, isScratchCollection }) => {
   const dispatch = useDispatch();
   const workspaces = useSelector((state) => state.workspaces.workspaces);
-  const activeWorkspaceUid = useSelector((state) => state.workspaces.activeWorkspaceUid);
+  const activeWorkspaceUid = useSelector(
+    (state) => state.workspaces.activeWorkspaceUid
+  );
   const collections = useSelector((state) => state.collections.collections);
   const tabs = useSelector((state) => state.tabs.tabs);
 
   // Get the current active workspace
   const currentWorkspace = workspaces.find((w) => w.uid === activeWorkspaceUid);
   const gitRootPath = collection?.git?.gitRootPath;
+  const currentGitBranch = collection?.git?.currentGitBranch;
   const isOpenAPISyncEnabled = useBetaFeature(BETA_FEATURES.OPENAPI_SYNC);
+
+  useEffect(() => {
+    if (isScratchCollection || !collection?.pathname) {
+      return;
+    }
+    const loadGitData = async () => {
+      try {
+        const data = await window.ipcRenderer.invoke(
+          'renderer:git:get-data',
+          collection.pathname
+        );
+        if (data && data.gitRootPath) {
+          dispatch(
+            updateCollectionGitData({
+              collectionUid: collection.uid,
+              gitData: data
+            })
+          );
+        }
+      } catch (err) {
+        console.error('Failed to load git data in CollectionHeader:', err);
+      }
+    };
+    loadGitData();
+  }, [collection?.pathname, isScratchCollection, dispatch]);
+
+  const handleBranchClick = () => {
+    dispatch(
+      addTab({
+        uid: `${collection.uid}-git-ui`,
+        collectionUid: collection.uid,
+        type: 'git-ui',
+        name: 'Git UI'
+      })
+    );
+  };
 
   // Workspace rename state
   const [isRenamingWorkspace, setIsRenamingWorkspace] = useState(false);
   const [workspaceNameInput, setWorkspaceNameInput] = useState('');
   const [workspaceNameError, setWorkspaceNameError] = useState('');
   const [closeWorkspaceModalOpen, setCloseWorkspaceModalOpen] = useState(false);
-  const [createWorkspaceModalOpen, setCreateWorkspaceModalOpen] = useState(false);
+  const [createWorkspaceModalOpen, setCreateWorkspaceModalOpen]
+    = useState(false);
 
   const switcherRef = useRef();
   const workspaceActionsRef = useRef();
@@ -72,12 +121,20 @@ const CollectionHeader = ({ collection, isScratchCollection }) => {
   // Auto-enter rename mode when workspace is newly created
   useEffect(() => {
     if (isScratchCollection && currentWorkspace?.isNewlyCreated) {
-      dispatch(updateWorkspace({ uid: currentWorkspace.uid, isNewlyCreated: false }));
+      dispatch(
+        updateWorkspace({ uid: currentWorkspace.uid, isNewlyCreated: false })
+      );
       setIsRenamingWorkspace(true);
       setWorkspaceNameInput(currentWorkspace.name || '');
       setWorkspaceNameError('');
     }
-  }, [isScratchCollection, currentWorkspace?.isNewlyCreated, currentWorkspace?.uid, currentWorkspace?.name, dispatch]);
+  }, [
+    isScratchCollection,
+    currentWorkspace?.isNewlyCreated,
+    currentWorkspace?.uid,
+    currentWorkspace?.name,
+    dispatch
+  ]);
 
   const handleCancelWorkspaceRename = useCallback(() => {
     if (openingAdvancedRef.current) return;
@@ -94,7 +151,10 @@ const CollectionHeader = ({ collection, isScratchCollection }) => {
     if (!isRenamingWorkspace) return;
 
     const handleClickOutside = (event) => {
-      if (workspaceRenameContainerRef.current && !workspaceRenameContainerRef.current.contains(event.target)) {
+      if (
+        workspaceRenameContainerRef.current
+        && !workspaceRenameContainerRef.current.contains(event.target)
+      ) {
         if (currentWorkspace?.isCreating) {
           clickedOutsideRef.current = true;
           handleSaveRef.current?.();
@@ -113,18 +173,27 @@ const CollectionHeader = ({ collection, isScratchCollection }) => {
       document.removeEventListener('mousedown', handleClickOutside);
       clearTimeout(timer);
     };
-  }, [isRenamingWorkspace, handleCancelWorkspaceRename, currentWorkspace?.isCreating]);
+  }, [
+    isRenamingWorkspace,
+    handleCancelWorkspaceRename,
+    currentWorkspace?.isCreating
+  ]);
 
-  const collectionUpdates = useSelector((state) => state.openapiSync?.collectionUpdates || {});
+  const collectionUpdates = useSelector(
+    (state) => state.openapiSync?.collectionUpdates || {}
+  );
   const { theme } = useTheme();
 
   if (!collection) {
     return null;
   }
 
-  const hasOpenApiSyncConfigured = collection?.brunoConfig?.openapi?.[0]?.sourceUrl;
-  const hasOpenApiUpdates = hasOpenApiSyncConfigured && collectionUpdates[collection.uid]?.hasUpdates;
-  const hasOpenApiError = hasOpenApiSyncConfigured && collectionUpdates[collection.uid]?.error;
+  const hasOpenApiSyncConfigured
+    = collection?.brunoConfig?.openapi?.[0]?.sourceUrl;
+  const hasOpenApiUpdates
+    = hasOpenApiSyncConfigured && collectionUpdates[collection.uid]?.hasUpdates;
+  const hasOpenApiError
+    = hasOpenApiSyncConfigured && collectionUpdates[collection.uid]?.error;
 
   // Get mounted collections for the current workspace (excluding scratch collections)
   const mountedCollections = collections.filter((c) => {
@@ -133,15 +202,21 @@ const CollectionHeader = ({ collection, isScratchCollection }) => {
     const isScratch = workspaces.some((w) => w.scratchCollectionUid === c.uid);
     if (isScratch) return false;
 
-    const workspaceCollectionPaths = currentWorkspace?.collections?.map((wc) => wc.path) || [];
-    return workspaceCollectionPaths.some((wcPath) => normalizePath(c.pathname) === normalizePath(wcPath));
+    const workspaceCollectionPaths
+      = currentWorkspace?.collections?.map((wc) => wc.path) || [];
+    return workspaceCollectionPaths.some(
+      (wcPath) => normalizePath(c.pathname) === normalizePath(wcPath)
+    );
   });
 
   // Count tabs for the current collection
-  const tabCount = tabs.filter((t) => t.collectionUid === collection.uid).length;
+  const tabCount = tabs.filter(
+    (t) => t.collectionUid === collection.uid
+  ).length;
 
   // Get tab count for a given collection uid
-  const getTabCount = (collectionUid) => tabs.filter((t) => t.collectionUid === collectionUid).length;
+  const getTabCount = (collectionUid) =>
+    tabs.filter((t) => t.collectionUid === collectionUid).length;
 
   // Get tab count for workspace (scratch collection)
   const workspaceTabCount = currentWorkspace?.scratchCollectionUid
@@ -150,8 +225,8 @@ const CollectionHeader = ({ collection, isScratchCollection }) => {
 
   // Display name and icon based on context
   const displayName = isScratchCollection
-    ? (currentWorkspace?.name || 'Untitled Workspace')
-    : (collection.name || 'Untitled Collection');
+    ? currentWorkspace?.name || 'Untitled Workspace'
+    : collection.name || 'Untitled Collection';
 
   const DisplayIcon = isScratchCollection ? IconCategory : IconBox;
 
@@ -167,7 +242,9 @@ const CollectionHeader = ({ collection, isScratchCollection }) => {
     switcherRef.current?.hide();
     if (!targetCollection?.uid) return;
 
-    const existingTab = tabs.find((t) => t.collectionUid === targetCollection.uid);
+    const existingTab = tabs.find(
+      (t) => t.collectionUid === targetCollection.uid
+    );
     if (existingTab) {
       dispatch(focusTab({ uid: existingTab.uid }));
     } else {
@@ -213,20 +290,44 @@ const CollectionHeader = ({ collection, isScratchCollection }) => {
   };
 
   const viewOpenApiSync = () => {
-    dispatch(addTab({
-      uid: uuid(),
-      collectionUid: collection.uid,
-      type: 'openapi-sync'
-    }));
+    dispatch(
+      addTab({
+        uid: uuid(),
+        collectionUid: collection.uid,
+        type: 'openapi-sync'
+      })
+    );
   };
 
   // Build overflow menu items for the "..." dropdown
   const overflowMenuItems = [
-    { id: 'variables', label: 'Variables', leftSection: IconEye, onClick: viewVariables },
+    {
+      id: 'variables',
+      label: 'Variables',
+      leftSection: IconEye,
+      onClick: viewVariables
+    },
     ...(isOpenAPISyncEnabled && !hasOpenApiSyncConfigured
-      ? [{ id: 'openapi-sync', label: 'OpenAPI', leftSection: OpenAPISyncIcon, rightSection: <StatusBadge status="info" size="xs">Beta</StatusBadge>, onClick: viewOpenApiSync }]
+      ? [
+          {
+            id: 'openapi-sync',
+            label: 'OpenAPI',
+            leftSection: OpenAPISyncIcon,
+            rightSection: (
+              <StatusBadge status="info" size="xs">
+                Beta
+              </StatusBadge>
+            ),
+            onClick: viewOpenApiSync
+          }
+        ]
       : []),
-    { id: 'collection-settings', label: 'Collection Settings', leftSection: IconSettings, onClick: viewCollectionSettings }
+    {
+      id: 'collection-settings',
+      label: 'Collection Settings',
+      leftSection: IconSettings,
+      onClick: viewCollectionSettings
+    }
   ];
 
   // Workspace action handlers (only used when isScratchCollection is true)
@@ -323,7 +424,9 @@ const CollectionHeader = ({ collection, isScratchCollection }) => {
           toast.success('Workspace created!');
         })
         .catch((err) => {
-          toast.error(err?.message || 'An error occurred while creating the workspace');
+          toast.error(
+            err?.message || 'An error occurred while creating the workspace'
+          );
         })
         .finally(() => {
           isSavingRef.current = false;
@@ -337,7 +440,9 @@ const CollectionHeader = ({ collection, isScratchCollection }) => {
           setWorkspaceNameError('');
         })
         .catch((err) => {
-          toast.error(err?.message || 'An error occurred while renaming the workspace');
+          toast.error(
+            err?.message || 'An error occurred while renaming the workspace'
+          );
           setWorkspaceNameError(err?.message || 'Failed to rename workspace');
         })
         .finally(() => {
@@ -368,7 +473,9 @@ const CollectionHeader = ({ collection, isScratchCollection }) => {
 
   const handleOpenAdvancedCreate = () => {
     openingAdvancedRef.current = true;
-    tempWorkspaceUidRef.current = currentWorkspace?.isCreating ? currentWorkspace.uid : null;
+    tempWorkspaceUidRef.current = currentWorkspace?.isCreating
+      ? currentWorkspace.uid
+      : null;
     setCreateWorkspaceModalOpen(true);
   };
 
@@ -388,19 +495,26 @@ const CollectionHeader = ({ collection, isScratchCollection }) => {
   };
 
   // Check if workspace actions should be shown
-  const showWorkspaceActions = isScratchCollection
-    && currentWorkspace
-    && currentWorkspace.type !== 'default'
-    && !isRenamingWorkspace;
+  const showWorkspaceActions
+    = isScratchCollection
+      && currentWorkspace
+      && currentWorkspace.type !== 'default'
+      && !isRenamingWorkspace;
 
   const handleDisplayIconClick = (e) => {
-    const uid = isScratchCollection ? `${collection.uid}-overview` : collection.uid;
-    const type = isScratchCollection ? 'workspaceOverview' : 'collection-settings';
-    dispatch(addTab({
-      uid: uid,
-      collectionUid: collection.uid,
-      type: type
-    }));
+    const uid = isScratchCollection
+      ? `${collection.uid}-overview`
+      : collection.uid;
+    const type = isScratchCollection
+      ? 'workspaceOverview'
+      : 'collection-settings';
+    dispatch(
+      addTab({
+        uid: uid,
+        collectionUid: collection.uid,
+        type: type
+      })
+    );
   };
 
   return (
@@ -420,8 +534,15 @@ const CollectionHeader = ({ collection, isScratchCollection }) => {
         {/* Left side: Switcher dropdown or rename input */}
         <div className="collection-switcher">
           {isRenamingWorkspace ? (
-            <div className="workspace-rename-container" ref={workspaceRenameContainerRef}>
-              <DisplayIcon size={18} strokeWidth={1.5} className="cursor-pointer display-icon" />
+            <div
+              className="workspace-rename-container"
+              ref={workspaceRenameContainerRef}
+            >
+              <DisplayIcon
+                size={18}
+                strokeWidth={1.5}
+                className="cursor-pointer display-icon"
+              />
               <div className="workspace-input-wrapper">
                 <input
                   ref={workspaceNameInputRef}
@@ -470,15 +591,30 @@ const CollectionHeader = ({ collection, isScratchCollection }) => {
             </div>
           ) : (
             <div className="flex flex-row justify-center items-center gap-x-1">
-              <DisplayIcon size={18} strokeWidth={1.5} className="cursor-pointer display-icon" onClick={handleDisplayIconClick} />
+              <DisplayIcon
+                size={18}
+                strokeWidth={1.5}
+                className="cursor-pointer display-icon"
+                onClick={handleDisplayIconClick}
+              />
               <Dropdown
                 placement="bottom-start"
                 onCreate={onSwitcherCreate}
                 appendTo={() => document.body}
                 icon={(
                   <button className="switcher-trigger">
-                    <span className={classNames('switcher-name', { 'scratch-collection': isScratchCollection })}>{displayName}</span>
-                    <IconChevronDown size={14} strokeWidth={1.5} className="chevron" />
+                    <span
+                      className={classNames('switcher-name', {
+                        'scratch-collection': isScratchCollection
+                      })}
+                    >
+                      {displayName}
+                    </span>
+                    <IconChevronDown
+                      size={14}
+                      strokeWidth={1.5}
+                      className="chevron"
+                    />
                   </button>
                 )}
               >
@@ -490,7 +626,8 @@ const CollectionHeader = ({ collection, isScratchCollection }) => {
                         className={classNames('dropdown-item', {
                           'dropdown-item-active': isScratchCollection
                         })}
-                        onClick={() => handleSwitchToWorkspace(currentWorkspace.uid)}
+                        onClick={() =>
+                          handleSwitchToWorkspace(currentWorkspace.uid)}
                       >
                         <div className="dropdown-icon">
                           <IconCategory size={16} strokeWidth={1.5} />
@@ -499,7 +636,9 @@ const CollectionHeader = ({ collection, isScratchCollection }) => {
                           {currentWorkspace.name || 'Untitled Workspace'}
                         </span>
                         {workspaceTabCount > 0 && (
-                          <span className="dropdown-tab-count">{workspaceTabCount}</span>
+                          <span className="dropdown-tab-count">
+                            {workspaceTabCount}
+                          </span>
                         )}
                       </div>
                     </>
@@ -515,16 +654,22 @@ const CollectionHeader = ({ collection, isScratchCollection }) => {
                           <div
                             key={col.uid}
                             className={classNames('dropdown-item', {
-                              'dropdown-item-active': !isScratchCollection && collection.uid === col.uid
+                              'dropdown-item-active':
+                                !isScratchCollection
+                                && collection.uid === col.uid
                             })}
                             onClick={() => handleSwitchToCollection(col)}
                           >
                             <div className="dropdown-icon">
                               <IconBox size={16} strokeWidth={1.5} />
                             </div>
-                            <span className="dropdown-label collection-header-dropdown-label">{col.name || 'Untitled Collection'}</span>
+                            <span className="dropdown-label collection-header-dropdown-label">
+                              {col.name || 'Untitled Collection'}
+                            </span>
                             {colTabCount > 0 && (
-                              <span className="dropdown-tab-count">{colTabCount}</span>
+                              <span className="dropdown-tab-count">
+                                {colTabCount}
+                              </span>
                             )}
                           </div>
                         );
@@ -542,9 +687,18 @@ const CollectionHeader = ({ collection, isScratchCollection }) => {
               placement="bottom-start"
               onCreate={onWorkspaceActionsCreate}
               appendTo={() => document.body}
-              icon={<IconDots size={18} strokeWidth={1.5} className="workspace-actions-trigger" />}
+              icon={(
+                <IconDots
+                  size={18}
+                  strokeWidth={1.5}
+                  className="workspace-actions-trigger"
+                />
+              )}
             >
-              <div className="dropdown-item" onClick={handleRenameWorkspaceClick}>
+              <div
+                className="dropdown-item"
+                onClick={handleRenameWorkspaceClick}
+              >
                 <div className="dropdown-icon">
                   <IconEdit size={16} strokeWidth={1.5} />
                 </div>
@@ -562,7 +716,10 @@ const CollectionHeader = ({ collection, isScratchCollection }) => {
                 </div>
                 <span>Export</span>
               </div>
-              <div className="dropdown-item" onClick={handleCloseWorkspaceClick}>
+              <div
+                className="dropdown-item"
+                onClick={handleCloseWorkspaceClick}
+              >
                 <div className="dropdown-icon">
                   <IconX size={16} strokeWidth={1.5} />
                 </div>
@@ -575,32 +732,85 @@ const CollectionHeader = ({ collection, isScratchCollection }) => {
         {/* Right side: Actions (only for regular collections) */}
         {!isScratchCollection && (
           <div className="flex flex-grow gap-1.5 items-center justify-end">
+            {gitRootPath && currentGitBranch && (
+              <Button
+                variant="outline"
+                color="secondary"
+                size="xs"
+                onClick={handleBranchClick}
+                icon={<IconBrandGit size={14} style={{ color: theme.brand }} />}
+                title={`Switch branch / view Git UI (on branch: ${currentGitBranch})`}
+              >
+                {currentGitBranch}
+              </Button>
+            )}
             {/* OpenAPI Sync - standalone only when configured and beta enabled */}
             {isOpenAPISyncEnabled && hasOpenApiSyncConfigured && (
               <ToolHint
-                text={hasOpenApiError ? 'OpenAPI Error' : hasOpenApiUpdates ? 'OpenAPI Updates Available' : 'OpenAPI'}
+                text={
+                  hasOpenApiError
+                    ? 'OpenAPI Error'
+                    : hasOpenApiUpdates
+                      ? 'OpenAPI Updates Available'
+                      : 'OpenAPI'
+                }
                 toolhintId="OpenApiSyncToolhintId"
                 place="bottom"
               >
-                <ActionIcon onClick={viewOpenApiSync} aria-label="OpenAPI" size="sm" className="relative">
+                <ActionIcon
+                  onClick={viewOpenApiSync}
+                  aria-label="OpenAPI"
+                  size="sm"
+                  className="relative"
+                >
                   <OpenAPISyncIcon size={15} />
                   {(hasOpenApiUpdates || hasOpenApiError) && (
-                    <span className="absolute top-0 right-0 w-1.5 h-1.5 rounded-full" style={{ backgroundColor: hasOpenApiError ? theme.status.danger.text : theme.status.warning.text }} />
+                    <span
+                      className="absolute top-0 right-0 w-1.5 h-1.5 rounded-full"
+                      style={{
+                        backgroundColor: hasOpenApiError
+                          ? theme.status.danger.text
+                          : theme.status.warning.text
+                      }}
+                    />
                   )}
                 </ActionIcon>
               </ToolHint>
             )}
             {/* Runner - always visible */}
-            <ToolHint text="Runner" toolhintId="RunnerToolhintId" place="bottom">
-              <ActionIcon onClick={handleRun} aria-label="Runner" size="sm" data-testid="runner">
+            <ToolHint
+              text="Runner"
+              toolhintId="RunnerToolhintId"
+              place="bottom"
+            >
+              <ActionIcon
+                onClick={handleRun}
+                aria-label="Runner"
+                size="sm"
+                data-testid="runner"
+              >
                 <IconRun size={16} strokeWidth={1.5} />
               </ActionIcon>
             </ToolHint>
             {/* JS Sandbox Mode - always visible */}
             <JsSandboxMode collection={collection} />
             {/* Overflow menu */}
-            <MenuDropdown items={overflowMenuItems} placement="bottom-end" data-testid="more-actions">
-              <ActionIcon label="More actions" size="sm" style={{ border: `1px solid ${theme.border.border1}`, borderRadius: theme.border.radius.base, width: 24, marginRight: 4, marginLeft: 4 }}>
+            <MenuDropdown
+              items={overflowMenuItems}
+              placement="bottom-end"
+              data-testid="more-actions"
+            >
+              <ActionIcon
+                label="More actions"
+                size="sm"
+                style={{
+                  border: `1px solid ${theme.border.border1}`,
+                  borderRadius: theme.border.radius.base,
+                  width: 24,
+                  marginRight: 4,
+                  marginLeft: 4
+                }}
+              >
                 <IconDots size={16} strokeWidth={1.5} />
               </ActionIcon>
             </MenuDropdown>

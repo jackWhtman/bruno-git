@@ -226,6 +226,17 @@ export const collectionsSlice = createSlice({
         collection.brunoConfig = brunoConfig;
       }
     },
+    updateCollectionGitData: (state, action) => {
+      const { collectionUid, gitData } = action.payload;
+      const collection = findCollectionByUid(state.collections, collectionUid);
+
+      if (collection) {
+        collection.git = {
+          ...collection.git,
+          ...gitData
+        };
+      }
+    },
     renameCollection: (state, action) => {
       const collection = findCollectionByUid(state.collections, action.payload.collectionUid);
 
@@ -3862,7 +3873,8 @@ export const {
   addTransientDirectory,
   addSaveTransientRequestModal,
   removeSaveTransientRequestModal,
-  clearAllSaveTransientRequestModals
+  clearAllSaveTransientRequestModals,
+  updateCollectionGitData
 } = collectionsSlice.actions;
 
 export default collectionsSlice.reducer;

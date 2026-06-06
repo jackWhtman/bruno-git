@@ -30,13 +30,9 @@ const StyledWrapper = styled.div`
     min-width: 1.25rem;
     min-height: 1.25rem;
     padding: 0 0.25rem;
-    border: 1px solid ${(props) => (props.theme.mode === 'dark'
-      ? props.theme.workspace.button.bg
-      : props.theme.border.border1)};
+    border: 1px solid ${(props) => props.theme.border.border1};
     border-radius: ${(props) => props.theme.border.radius.base};
-    background-color: ${(props) => (props.theme.mode === 'dark'
-      ? props.theme.overlay.overlay0
-      : props.theme.background.surface0)};
+    background-color: ${(props) => props.theme.background.surface0};
     color: ${(props) => props.theme.text};
     font-weight: 500;
   }
@@ -62,7 +58,7 @@ const StyledWrapper = styled.div`
     gap: 0.75rem;
     width: 100%;
     overflow: hidden;
-    border: 1px solid ${(props) => (props.theme.mode === 'dark' ? props.theme.border.border1 : props.theme.border.border0)};
+    border: 1px solid ${(props) => props.theme.border.border1};
     border-radius: ${(props) => props.theme.border.radius.base};
     padding: 0.5rem;
   }
@@ -75,7 +71,7 @@ const StyledWrapper = styled.div`
     min-width: 0;
     min-height: 1.75rem;
     gap: 0.25rem;
-    border: 1px solid ${(props) => (props.theme.mode === 'dark' ? props.theme.border.border1 : props.theme.border.border0)};
+    border: 1px solid ${(props) => props.theme.border.border1};
     border-radius: ${(props) => props.theme.border.radius.base};
     padding: 0.25rem 0.5rem;
     color: ${(props) => props.theme.colors.text.subtext1};

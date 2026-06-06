@@ -186,6 +186,8 @@ app.on('ready', async () => {
   initializeShellEnv();
 
   if (isDev) {
+    // Commented out to prevent "TypeError: object null is not iterable" crash in sandbox_bundle in Electron 37+
+    /*
     const { installExtension, REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS } = require('electron-devtools-installer');
     try {
       const extensions = await installExtension([REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS], {
@@ -200,6 +202,7 @@ app.on('ready', async () => {
     } catch (err) {
       console.error('An error occurred while loading extensions: ', err);
     }
+    */
   }
 
   // Initialize system proxy cache early (non-blocking)
@@ -347,6 +350,9 @@ app.on('ready', async () => {
       mainWindow.webContents.setZoomLevel(zoomLevel);
     }
     mainWindow.show();
+    if (isDev) {
+      mainWindow.webContents.openDevTools();
+    }
   });
   const devPort = process.env.BRUNO_DEV_PORT || 3000;
   const url = isDev

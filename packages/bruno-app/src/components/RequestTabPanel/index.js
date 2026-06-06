@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo
+} from 'react';
 import find from 'lodash/find';
 import toast from 'react-hot-toast';
 import { useSelector, useDispatch } from 'react-redux';
@@ -7,8 +13,15 @@ import HttpRequestPane from 'components/RequestPane/HttpRequestPane';
 import GrpcRequestPane from 'components/RequestPane/GrpcRequestPane/index';
 import ResponsePane from 'components/ResponsePane';
 import GrpcResponsePane from 'components/ResponsePane/GrpcResponsePane';
-import { findItemInCollection, findItemInCollectionByPathname, areItemsLoading } from 'utils/collections';
-import { cancelRequest, sendRequest } from 'providers/ReduxStore/slices/collections/actions';
+import {
+  findItemInCollection,
+  findItemInCollectionByPathname,
+  areItemsLoading
+} from 'utils/collections';
+import {
+  cancelRequest,
+  sendRequest
+} from 'providers/ReduxStore/slices/collections/actions';
 import { updateGqlDocsOpen } from 'providers/ReduxStore/slices/tabs';
 import RequestNotFound from './RequestNotFound';
 import QueryUrl from 'components/RequestPane/QueryUrl/index';
@@ -21,7 +34,10 @@ import { DocExplorer } from '@usebruno/graphql-docs';
 
 import StyledWrapper from './StyledWrapper';
 import FolderSettings from 'components/FolderSettings';
-import { getGlobalEnvironmentVariables, getGlobalEnvironmentVariablesMasked } from 'utils/collections/index';
+import {
+  getGlobalEnvironmentVariables,
+  getGlobalEnvironmentVariablesMasked
+} from 'utils/collections/index';
 import { produce } from 'immer';
 import CollectionOverview from 'components/CollectionSettings/Overview';
 import RequestNotLoaded from './RequestNotLoaded';
@@ -42,6 +58,7 @@ import EnvironmentSettings from 'components/Environments/EnvironmentSettings';
 import GlobalEnvironmentSettings from 'components/Environments/GlobalEnvironmentSettings';
 import OpenAPISyncTab from 'components/OpenAPISyncTab';
 import OpenAPISpecTab from 'components/OpenAPISpecTab';
+import GitUI from 'components/Git/GitUI';
 import CollapsedPanelIndicator from './CollapsedPanelIndicator';
 import { IconLoader2 } from '@tabler/icons';
 
@@ -57,21 +74,38 @@ const RequestTabPanel = () => {
   const tabs = useSelector((state) => state.tabs.tabs);
   const activeTabUid = useSelector((state) => state.tabs.activeTabUid);
   const focusedTab = find(tabs, (t) => t.uid === activeTabUid);
-  const { globalEnvironments, activeGlobalEnvironmentUid } = useSelector((state) => state.globalEnvironments);
+  const { globalEnvironments, activeGlobalEnvironmentUid } = useSelector(
+    (state) => state.globalEnvironments
+  );
   const _collections = useSelector((state) => state.collections.collections);
   const preferences = useSelector((state) => state.app.preferences);
-  const { workspaces, activeWorkspaceUid } = useSelector((state) => state.workspaces);
+  const { workspaces, activeWorkspaceUid } = useSelector(
+    (state) => state.workspaces
+  );
   const activeWorkspace = workspaces.find((w) => w.uid === activeWorkspaceUid);
-  const isVerticalLayout = preferences?.layout?.responsePaneOrientation === 'vertical';
+  const isVerticalLayout
+    = preferences?.layout?.responsePaneOrientation === 'vertical';
   const isConsoleOpen = useSelector((state) => state.logs.isConsoleOpen);
 
-  const isRequestTab = focusedTab && ['request', 'http-request', 'grpc-request', 'ws-request', 'graphql-request'].includes(focusedTab.type);
-  useKeybinding('sendRequest', (e) => {
-    e?.preventDefault?.();
-    e?.stopPropagation?.();
-    handleRun();
-    return false;
-  }, { enabled: !!isRequestTab, deps: [isRequestTab] });
+  const isRequestTab
+    = focusedTab
+      && [
+        'request',
+        'http-request',
+        'grpc-request',
+        'ws-request',
+        'graphql-request'
+      ].includes(focusedTab.type);
+  useKeybinding(
+    'sendRequest',
+    (e) => {
+      e?.preventDefault?.();
+      e?.stopPropagation?.();
+      handleRun();
+      return false;
+    },
+    { enabled: !!isRequestTab, deps: [isRequestTab] }
+  );
 
   // Use ref to avoid stale closure in event handlers
   const isVerticalLayoutRef = useRef(isVerticalLayout);
@@ -89,16 +123,24 @@ const RequestTabPanel = () => {
         globalEnvironments,
         activeGlobalEnvironmentUid
       });
-      const globalEnvSecrets = getGlobalEnvironmentVariablesMasked({ globalEnvironments, activeGlobalEnvironmentUid });
+      const globalEnvSecrets = getGlobalEnvironmentVariablesMasked({
+        globalEnvironments,
+        activeGlobalEnvironmentUid
+      });
       collection.globalEnvironmentVariables = globalEnvironmentVariables;
       collection.globalEnvSecrets = globalEnvSecrets;
     }
   });
 
-  const collection = find(collections, (c) => c.uid === focusedTab?.collectionUid);
+  const collection = find(
+    collections,
+    (c) => c.uid === focusedTab?.collectionUid
+  );
 
   const isItemsLoading = useMemo(() => {
-    return collection?.mountStatus === 'mounting' || areItemsLoading(collection);
+    return (
+      collection?.mountStatus === 'mounting' || areItemsLoading(collection)
+    );
   }, [collection?.mountStatus, collection]);
 
   const [dragging, setDragging] = useState(false);
@@ -130,19 +172,25 @@ const RequestTabPanel = () => {
   const showGqlDocs = focusedTab?.gqlDocsOpen || false;
 
   const onSchemaLoad = useCallback((schema) => setSchema(schema), []);
-  const toggleDocs = useCallback((value = null) => {
-    const newValue = value !== null ? !!value : !showGqlDocs;
-    dispatch(updateGqlDocsOpen({ uid: activeTabUid, gqlDocsOpen: newValue }));
-  }, [dispatch, activeTabUid, showGqlDocs]);
+  const toggleDocs = useCallback(
+    (value = null) => {
+      const newValue = value !== null ? !!value : !showGqlDocs;
+      dispatch(updateGqlDocsOpen({ uid: activeTabUid, gqlDocsOpen: newValue }));
+    },
+    [dispatch, activeTabUid, showGqlDocs]
+  );
 
-  const handleGqlClickReference = useCallback((reference) => {
-    if (docExplorerRef.current) {
-      docExplorerRef.current.showDocForReference(reference);
-    }
-    if (!showGqlDocs) {
-      dispatch(updateGqlDocsOpen({ uid: activeTabUid, gqlDocsOpen: true }));
-    }
-  }, [dispatch, activeTabUid, showGqlDocs]);
+  const handleGqlClickReference = useCallback(
+    (reference) => {
+      if (docExplorerRef.current) {
+        docExplorerRef.current.showDocForReference(reference);
+      }
+      if (!showGqlDocs) {
+        dispatch(updateGqlDocsOpen({ uid: activeTabUid, gqlDocsOpen: true }));
+      }
+    },
+    [dispatch, activeTabUid, showGqlDocs]
+  );
 
   // Refs for panel collapse/expand functions and current collapsed state
   const collapseRequestRef = useRef(collapseRequest);
@@ -158,74 +206,106 @@ const RequestTabPanel = () => {
     expandResponseRef.current = expandResponse;
     requestPaneCollapsedRef.current = requestPaneCollapsed;
     responsePaneCollapsedRef.current = responsePaneCollapsed;
-  }, [collapseRequest, collapseResponse, expandRequest, expandResponse, requestPaneCollapsed, responsePaneCollapsed]);
+  }, [
+    collapseRequest,
+    collapseResponse,
+    expandRequest,
+    expandResponse,
+    requestPaneCollapsed,
+    responsePaneCollapsed
+  ]);
 
   const stopDragging = useCallback(() => {
     draggingRef.current = false;
     setDragging(false);
   }, []);
 
-  const handleMouseMove = useCallback((e) => {
-    if (!draggingRef.current || !mainSectionRef.current) return;
+  const handleMouseMove = useCallback(
+    (e) => {
+      if (!draggingRef.current || !mainSectionRef.current) return;
 
-    e.preventDefault();
-    const mainRect = mainSectionRef.current.getBoundingClientRect();
-
-    if (isVerticalLayoutRef.current) {
-      const newHeight = e.clientY - mainRect.top;
-      const maxHeight = mainRect.height - MIN_BOTTOM_PANE_HEIGHT;
-      const distanceFromBottom = mainRect.bottom - e.clientY;
-
-      if (newHeight < COLLAPSE_EDGE_THRESHOLD) {
-        if (!requestPaneCollapsedRef.current) collapseRequestRef.current();
-        return;
-      }
-
-      if (distanceFromBottom < COLLAPSE_EDGE_THRESHOLD) {
-        if (!responsePaneCollapsedRef.current) collapseResponseRef.current();
-        return;
-      }
-
-      if (requestPaneCollapsedRef.current && newHeight < EXPAND_EDGE_THRESHOLD) return;
-      if (responsePaneCollapsedRef.current && distanceFromBottom < EXPAND_EDGE_THRESHOLD) return;
-
-      if (requestPaneCollapsedRef.current) expandRequestRef.current();
-      if (responsePaneCollapsedRef.current) expandResponseRef.current();
-
-      const clampedHeight = Math.max(MIN_TOP_PANE_HEIGHT, Math.min(newHeight, maxHeight));
-      setTopPaneHeight(clampedHeight);
-    } else {
-      const newWidth = e.clientX - mainRect.left;
-      const maxWidth = mainRect.width - MIN_RIGHT_PANE_WIDTH;
-      const distanceFromRight = mainRect.right - e.clientX;
-
-      if (newWidth < COLLAPSE_EDGE_THRESHOLD) {
-        if (!requestPaneCollapsedRef.current) collapseRequestRef.current();
-        return;
-      }
-
-      if (distanceFromRight < COLLAPSE_EDGE_THRESHOLD) {
-        if (!responsePaneCollapsedRef.current) collapseResponseRef.current();
-        return;
-      }
-
-      if (requestPaneCollapsedRef.current && newWidth < EXPAND_EDGE_THRESHOLD) return;
-      if (responsePaneCollapsedRef.current && distanceFromRight < EXPAND_EDGE_THRESHOLD) return;
-
-      if (requestPaneCollapsedRef.current) expandRequestRef.current();
-      if (responsePaneCollapsedRef.current) expandResponseRef.current();
-
-      const clampedWidth = Math.max(MIN_LEFT_PANE_WIDTH, Math.min(newWidth, maxWidth));
-      setLeftPaneWidth(clampedWidth);
-    }
-  }, [setTopPaneHeight, setLeftPaneWidth]);
-
-  const handleMouseUp = useCallback((e) => {
-    if (draggingRef.current) {
       e.preventDefault();
-      stopDragging();
-    }
-  }, [stopDragging]);
+      const mainRect = mainSectionRef.current.getBoundingClientRect();
+
+      if (isVerticalLayoutRef.current) {
+        const newHeight = e.clientY - mainRect.top;
+        const maxHeight = mainRect.height - MIN_BOTTOM_PANE_HEIGHT;
+        const distanceFromBottom = mainRect.bottom - e.clientY;
+
+        if (newHeight < COLLAPSE_EDGE_THRESHOLD) {
+          if (!requestPaneCollapsedRef.current) collapseRequestRef.current();
+          return;
+        }
+
+        if (distanceFromBottom < COLLAPSE_EDGE_THRESHOLD) {
+          if (!responsePaneCollapsedRef.current) collapseResponseRef.current();
+          return;
+        }
+
+        if (
+          requestPaneCollapsedRef.current
+          && newHeight < EXPAND_EDGE_THRESHOLD
+        )
+          return;
+        if (
+          responsePaneCollapsedRef.current
+          && distanceFromBottom < EXPAND_EDGE_THRESHOLD
+        )
+          return;
+
+        if (requestPaneCollapsedRef.current) expandRequestRef.current();
+        if (responsePaneCollapsedRef.current) expandResponseRef.current();
+
+        const clampedHeight = Math.max(
+          MIN_TOP_PANE_HEIGHT,
+          Math.min(newHeight, maxHeight)
+        );
+        setTopPaneHeight(clampedHeight);
+      } else {
+        const newWidth = e.clientX - mainRect.left;
+        const maxWidth = mainRect.width - MIN_RIGHT_PANE_WIDTH;
+        const distanceFromRight = mainRect.right - e.clientX;
+
+        if (newWidth < COLLAPSE_EDGE_THRESHOLD) {
+          if (!requestPaneCollapsedRef.current) collapseRequestRef.current();
+          return;
+        }
+
+        if (distanceFromRight < COLLAPSE_EDGE_THRESHOLD) {
+          if (!responsePaneCollapsedRef.current) collapseResponseRef.current();
+          return;
+        }
+
+        if (requestPaneCollapsedRef.current && newWidth < EXPAND_EDGE_THRESHOLD)
+          return;
+        if (
+          responsePaneCollapsedRef.current
+          && distanceFromRight < EXPAND_EDGE_THRESHOLD
+        )
+          return;
+
+        if (requestPaneCollapsedRef.current) expandRequestRef.current();
+        if (responsePaneCollapsedRef.current) expandResponseRef.current();
+
+        const clampedWidth = Math.max(
+          MIN_LEFT_PANE_WIDTH,
+          Math.min(newWidth, maxWidth)
+        );
+        setLeftPaneWidth(clampedWidth);
+      }
+    },
+    [setTopPaneHeight, setLeftPaneWidth]
+  );
+
+  const handleMouseUp = useCallback(
+    (e) => {
+      if (draggingRef.current) {
+        e.preventDefault();
+        stopDragging();
+      }
+    },
+    [stopDragging]
+  );
 
   const startDragging = useCallback((e) => {
     e.preventDefault();
@@ -233,34 +313,49 @@ const RequestTabPanel = () => {
     setDragging(true);
   }, []);
 
-  const applyPointerResize = useCallback((e) => {
-    if (!mainSectionRef.current) return;
-    const mainRect = mainSectionRef.current.getBoundingClientRect();
+  const applyPointerResize = useCallback(
+    (e) => {
+      if (!mainSectionRef.current) return;
+      const mainRect = mainSectionRef.current.getBoundingClientRect();
 
-    if (isVerticalLayoutRef.current) {
-      const newHeight = e.clientY - mainRect.top;
-      const maxHeight = mainRect.height - MIN_BOTTOM_PANE_HEIGHT;
-      const clampedHeight = Math.max(MIN_TOP_PANE_HEIGHT, Math.min(newHeight, maxHeight));
-      setTopPaneHeight(clampedHeight);
-    } else {
-      const newWidth = e.clientX - mainRect.left;
-      const maxWidth = mainRect.width - MIN_RIGHT_PANE_WIDTH;
-      const clampedWidth = Math.max(MIN_LEFT_PANE_WIDTH, Math.min(newWidth, maxWidth));
-      setLeftPaneWidth(clampedWidth);
-    }
-  }, [setTopPaneHeight, setLeftPaneWidth]);
+      if (isVerticalLayoutRef.current) {
+        const newHeight = e.clientY - mainRect.top;
+        const maxHeight = mainRect.height - MIN_BOTTOM_PANE_HEIGHT;
+        const clampedHeight = Math.max(
+          MIN_TOP_PANE_HEIGHT,
+          Math.min(newHeight, maxHeight)
+        );
+        setTopPaneHeight(clampedHeight);
+      } else {
+        const newWidth = e.clientX - mainRect.left;
+        const maxWidth = mainRect.width - MIN_RIGHT_PANE_WIDTH;
+        const clampedWidth = Math.max(
+          MIN_LEFT_PANE_WIDTH,
+          Math.min(newWidth, maxWidth)
+        );
+        setLeftPaneWidth(clampedWidth);
+      }
+    },
+    [setTopPaneHeight, setLeftPaneWidth]
+  );
 
-  const handleRequestIndicatorDragStart = useCallback((e) => {
-    expandRequest();
-    applyPointerResize(e);
-    startDragging(e);
-  }, [expandRequest, applyPointerResize, startDragging]);
+  const handleRequestIndicatorDragStart = useCallback(
+    (e) => {
+      expandRequest();
+      applyPointerResize(e);
+      startDragging(e);
+    },
+    [expandRequest, applyPointerResize, startDragging]
+  );
 
-  const handleResponseIndicatorDragStart = useCallback((e) => {
-    expandResponse();
-    applyPointerResize(e);
-    startDragging(e);
-  }, [expandResponse, applyPointerResize, startDragging]);
+  const handleResponseIndicatorDragStart = useCallback(
+    (e) => {
+      expandResponse();
+      applyPointerResize(e);
+      startDragging(e);
+    },
+    [expandResponse, applyPointerResize, startDragging]
+  );
 
   useEffect(() => {
     document.addEventListener('mouseup', handleMouseUp);
@@ -317,7 +412,9 @@ const RequestTabPanel = () => {
   }
 
   if (focusedTab.type === 'workspaceOverview') {
-    return activeWorkspace ? <WorkspaceOverview workspace={activeWorkspace} /> : null;
+    return activeWorkspace ? (
+      <WorkspaceOverview workspace={activeWorkspace} />
+    ) : null;
   }
 
   if (focusedTab.type === 'workspaceEnvironments') {
@@ -341,23 +438,40 @@ const RequestTabPanel = () => {
     let example = null;
     if (item?.examples) {
       example = item.examples.find((ex) => ex.uid === focusedTab.uid);
-      if (!example && typeof focusedTab.exampleIndex === 'number' && focusedTab.exampleIndex >= 0) {
+      if (
+        !example
+        && typeof focusedTab.exampleIndex === 'number'
+        && focusedTab.exampleIndex >= 0
+      ) {
         example = item.examples[focusedTab.exampleIndex] || null;
       }
       if (!example && focusedTab.exampleName) {
-        example = item.examples.find((ex) => ex.name === focusedTab.exampleName);
+        example = item.examples.find(
+          (ex) => ex.name === focusedTab.exampleName
+        );
       }
     }
 
     if (example) {
-      return <ResponseExample item={item} collection={collection} example={example} />;
+      return (
+        <ResponseExample
+          item={item}
+          collection={collection}
+          example={example}
+        />
+      );
     }
 
     const displayName = focusedTab.exampleName || focusedTab.name;
     if (displayName && isItemsLoading) {
       return <RequestTabPanelLoading name={displayName} />;
     }
-    return <ExampleNotFound itemUid={focusedTab.itemUid} exampleUid={focusedTab.uid} />;
+    return (
+      <ExampleNotFound
+        itemUid={focusedTab.itemUid}
+        exampleUid={focusedTab.uid}
+      />
+    );
   }
 
   let item = findItemInCollection(collection, activeTabUid);
@@ -419,11 +533,17 @@ const RequestTabPanel = () => {
     return <OpenAPISpecTab collection={collection} tabUid={focusedTab.uid} />;
   }
 
+  if (focusedTab.type === 'git-ui') {
+    return <GitUI collection={collection} />;
+  }
+
   if (!item || !item.uid) {
     const showLoading = focusedTab.name && isItemsLoading;
-    return showLoading
-      ? <RequestTabPanelLoading name={focusedTab.name} />
-      : <RequestNotFound itemUid={activeTabUid} />;
+    return showLoading ? (
+      <RequestTabPanelLoading name={focusedTab.name} />
+    ) : (
+      <RequestNotFound itemUid={activeTabUid} />
+    );
   }
 
   if (item.partial) {
@@ -453,19 +573,33 @@ const RequestTabPanel = () => {
     }
     if (item.requestState !== 'sending' && item.requestState !== 'queued') {
       dispatch(sendRequest(item, collection.uid)).catch((err) =>
-        toast.custom((t) => <NetworkError onClose={() => toast.dismiss(t.id)} />, {
-          duration: 5000
-        }));
+        toast.custom(
+          (t) => <NetworkError onClose={() => toast.dismiss(t.id)} />,
+          {
+            duration: 5000
+          }
+        )
+      );
     }
   };
   const renderQueryUrl = () => {
     if (isGrpcRequest) {
-      return <GrpcQueryUrl item={item} collection={collection} handleRun={handleRun} />;
+      return (
+        <GrpcQueryUrl
+          item={item}
+          collection={collection}
+          handleRun={handleRun}
+        />
+      );
     }
     if (isWsRequest) {
-      return <WsQueryUrl item={item} collection={collection} handleRun={handleRun} />;
+      return (
+        <WsQueryUrl item={item} collection={collection} handleRun={handleRun} />
+      );
     }
-    return <QueryUrl item={item} collection={collection} handleRun={handleRun} />;
+    return (
+      <QueryUrl item={item} collection={collection} handleRun={handleRun} />
+    );
   };
 
   const renderRequestPane = () => {
@@ -483,9 +617,21 @@ const RequestTabPanel = () => {
       case 'http-request':
         return <HttpRequestPane item={item} collection={collection} />;
       case 'grpc-request':
-        return <GrpcRequestPane item={item} collection={collection} handleRun={handleRun} />;
+        return (
+          <GrpcRequestPane
+            item={item}
+            collection={collection}
+            handleRun={handleRun}
+          />
+        );
       case 'ws-request':
-        return <WSRequestPane item={item} collection={collection} handleRun={handleRun} />;
+        return (
+          <WSRequestPane
+            item={item}
+            collection={collection}
+            handleRun={handleRun}
+          />
+        );
       default:
         return null;
     }
@@ -494,19 +640,35 @@ const RequestTabPanel = () => {
   const renderResponsePane = () => {
     switch (item.type) {
       case 'grpc-request':
-        return <GrpcResponsePane item={item} collection={collection} response={item.response} />;
+        return (
+          <GrpcResponsePane
+            item={item}
+            collection={collection}
+            response={item.response}
+          />
+        );
       case 'ws-request':
-        return <WSResponsePane item={item} collection={collection} response={item.response} />;
+        return (
+          <WSResponsePane
+            item={item}
+            collection={collection}
+            response={item.response}
+          />
+        );
       default:
-        return <ResponsePane item={item} collection={collection} response={item.response} />;
+        return (
+          <ResponsePane
+            item={item}
+            collection={collection}
+            response={item.response}
+          />
+        );
     }
   };
 
   const getRequestPaneStyle = () => {
     if (responsePaneCollapsed) {
-      return isVerticalLayout
-        ? { flex: 1, width: '100%' }
-        : { flex: 1 };
+      return isVerticalLayout ? { flex: 1, width: '100%' } : { flex: 1 };
     }
 
     return isVerticalLayout
@@ -523,26 +685,40 @@ const RequestTabPanel = () => {
   return (
     <ScopedPersistenceProvider scope={focusedTab.uid}>
       <StyledWrapper
-        className={`flex flex-col flex-grow relative ${dragging ? 'dragging' : ''} ${isVerticalLayout ? 'vertical-layout' : ''
-        } ${requestPaneCollapsed ? 'request-collapsed' : ''} ${responsePaneCollapsed ? 'response-collapsed' : ''}`}
+        className={`flex flex-col flex-grow relative ${
+          dragging ? 'dragging' : ''
+        } ${isVerticalLayout ? 'vertical-layout' : ''} ${
+          requestPaneCollapsed ? 'request-collapsed' : ''
+        } ${responsePaneCollapsed ? 'response-collapsed' : ''}`}
       >
         <div className="query-url-wrapper pt-3 pb-4 px-4">
           {renderQueryUrl()}
         </div>
-        <section ref={mainSectionRef} className={`main flex ${isVerticalLayout ? 'flex-col' : ''} flex-grow relative overflow-auto`}>
+        <section
+          ref={mainSectionRef}
+          className={`main flex ${
+            isVerticalLayout ? 'flex-col' : ''
+          } flex-grow relative overflow-auto`}
+        >
           {requestPaneCollapsed ? (
             <CollapsedPanelIndicator
               panelType="request"
               isVertical={isVerticalLayout}
               onExpand={expandRequest}
               onDragStart={handleRequestIndicatorDragStart}
-              dragThresholdPx={isVerticalLayout ? MIN_TOP_PANE_HEIGHT / 2 : MIN_LEFT_PANE_WIDTH / 2}
+              dragThresholdPx={
+                isVerticalLayout
+                  ? MIN_TOP_PANE_HEIGHT / 2
+                  : MIN_LEFT_PANE_WIDTH / 2
+              }
             />
           ) : (
-            <section className="request-pane" data-testid="request-pane" style={getRequestPaneStyle()}>
-              <div className="px-4 h-full">
-                {renderRequestPane()}
-              </div>
+            <section
+              className="request-pane"
+              data-testid="request-pane"
+              style={getRequestPaneStyle()}
+            >
+              <div className="px-4 h-full">{renderRequestPane()}</div>
             </section>
           )}
 
@@ -565,19 +741,39 @@ const RequestTabPanel = () => {
               isVertical={isVerticalLayout}
               onExpand={expandResponse}
               onDragStart={handleResponseIndicatorDragStart}
-              dragThresholdPx={isVerticalLayout ? MIN_BOTTOM_PANE_HEIGHT / 2 : MIN_RIGHT_PANE_WIDTH / 2}
+              dragThresholdPx={
+                isVerticalLayout
+                  ? MIN_BOTTOM_PANE_HEIGHT / 2
+                  : MIN_RIGHT_PANE_WIDTH / 2
+              }
             />
           ) : (
-            <section className="response-pane flex-grow overflow-x-auto" data-testid="response-pane" style={requestPaneCollapsed ? { flex: 1 } : undefined}>
+            <section
+              className="response-pane flex-grow overflow-x-auto"
+              data-testid="response-pane"
+              style={requestPaneCollapsed ? { flex: 1 } : undefined}
+            >
               {renderResponsePane()}
             </section>
           )}
         </section>
 
         {item.type === 'graphql-request' ? (
-          <div className={`graphql-docs-explorer-container ${showGqlDocs ? '' : 'hidden'}`}>
-            <DocExplorer schema={schema} ref={(r) => (docExplorerRef.current = r)}>
-              <button className="mr-2" data-testid="graphql-docs-close-button" onClick={() => toggleDocs(false)} aria-label="Close Documentation Explorer">
+          <div
+            className={`graphql-docs-explorer-container ${
+              showGqlDocs ? '' : 'hidden'
+            }`}
+          >
+            <DocExplorer
+              schema={schema}
+              ref={(r) => (docExplorerRef.current = r)}
+            >
+              <button
+                className="mr-2"
+                data-testid="graphql-docs-close-button"
+                onClick={() => toggleDocs(false)}
+                aria-label="Close Documentation Explorer"
+              >
                 {'\u2715'}
               </button>
             </DocExplorer>

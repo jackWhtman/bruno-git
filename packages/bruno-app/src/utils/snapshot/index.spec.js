@@ -275,6 +275,17 @@ describe('deserializeTab', () => {
     expect(tab.uid).toBe('collection-uid-global-environment-settings');
   });
 
+  it('restores git-ui uid scoped to collection uid', () => {
+    const snapshotTab = {
+      type: 'git-ui',
+      accessor: 'type',
+      permanent: true
+    };
+
+    const tab = deserializeTab(snapshotTab, collection);
+    expect(tab.uid).toBe('collection-uid-git-ui');
+  });
+
   it('falls back to type-based uid restore for collection-scoped singleton tabs missing pathname', () => {
     const snapshotTab = {
       type: 'preferences',

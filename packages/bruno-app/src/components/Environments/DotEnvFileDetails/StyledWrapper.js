@@ -30,12 +30,12 @@ const StyledWrapper = styled.div`
       .view-toggle {
         display: flex;
         border: 1px solid ${(props) => props.theme.border.border0};
-        border-radius: 4px;
+        border-radius: ${(props) => props.theme.border.radius.sm};
         overflow: hidden;
 
         .toggle-btn {
           padding: 4px 12px;
-          font-size: 12px;
+          font-size: ${(props) => props.theme.font.size.sm};
           border: none;
           background: transparent;
           color: ${(props) => props.theme.colors.text.muted};
@@ -47,12 +47,12 @@ const StyledWrapper = styled.div`
           }
 
           &:hover {
-            background: ${(props) => props.theme.sidebar.bg};
+            background: ${(props) => props.theme.plainGrid.hoverBg};
           }
 
           &.active {
             background: ${(props) => props.theme.brand};
-            color: ${(props) => props.theme.bg};
+            color: ${(props) => props.theme.colors.text.white};
           }
         }
       }
@@ -66,11 +66,11 @@ const StyledWrapper = styled.div`
         background: transparent;
         color: ${(props) => props.theme.colors.text.muted};
         cursor: pointer;
-        border-radius: 4px;
+        border-radius: ${(props) => props.theme.border.radius.sm};
         transition: all 0.15s ease;
 
         &:hover {
-          background: ${(props) => props.theme.sidebar.bg};
+          background: ${(props) => props.theme.plainGrid.hoverBg};
           color: ${(props) => props.theme.text};
         }
 
