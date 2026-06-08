@@ -7,11 +7,11 @@ const StyledWrapper = styled.div`
   width: 100%;
 
   .git-view-header {
-    height: 48px;
+    height: 38px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 1rem;
+    padding: 0 0.75rem;
     background-color: ${(props) => props.theme.background.crust};
     border-bottom: 1px solid ${(props) => props.theme.border.border1};
   }
@@ -19,7 +19,7 @@ const StyledWrapper = styled.div`
   .git-view-content {
     flex: 1;
     overflow-y: auto;
-    padding: 1rem;
+    padding: 0.75rem;
   }
 
   .commit-list {
@@ -31,7 +31,7 @@ const StyledWrapper = styled.div`
   .commit-row {
     display: flex;
     align-items: center;
-    padding: 0.75rem 1rem;
+    padding: 0.4rem 0.625rem;
     border-radius: ${(props) => props.theme.border.radius.base};
     border: 1px solid ${(props) => props.theme.border.border1};
     background-color: ${(props) => props.theme.background.mantle};

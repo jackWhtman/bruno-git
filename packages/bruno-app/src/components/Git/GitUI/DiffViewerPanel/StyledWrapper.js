@@ -7,11 +7,11 @@ const StyledWrapper = styled.div`
   width: 100%;
 
   .diff-view-header {
-    height: 48px;
+    height: 38px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 1rem;
+    padding: 0 0.75rem;
     background-color: ${(props) => props.theme.background.base};
     border-bottom: 1px solid ${(props) => props.theme.border.border1};
   }

@@ -4,15 +4,36 @@ import { AccordionItem, AccordionHeader, AccordionContent } from './styledWrappe
 
 const AccordionContext = createContext();
 
-const Accordion = ({ children, defaultIndex, dataTestId }) => {
-  const [openIndex, setOpenIndex] = useState(defaultIndex);
+const Accordion = ({ children, defaultIndex, allowMultiple = false, dataTestId }) => {
+  const [openIndexes, setOpenIndexes] = useState(() => {
+    if (allowMultiple) {
+      return Array.isArray(defaultIndex) ? defaultIndex : (defaultIndex !== undefined ? [defaultIndex] : []);
+    }
+    return defaultIndex;
+  });
 
   const toggleItem = (index) => {
-    setOpenIndex(openIndex === index ? null : index);
+    if (allowMultiple) {
+      setOpenIndexes((prev) => {
+        if (prev.includes(index)) {
+          return prev.filter((i) => i !== index);
+        }
+        return [...prev, index];
+      });
+    } else {
+      setOpenIndexes((prev) => (prev === index ? null : index));
+    }
+  };
+
+  const isItemOpen = (index) => {
+    if (allowMultiple) {
+      return openIndexes.includes(index);
+    }
+    return openIndexes === index;
   };
 
   return (
-    <AccordionContext.Provider value={{ openIndex, toggleItem }}>
+    <AccordionContext.Provider value={{ toggleItem, isItemOpen }}>
       <div data-testid={dataTestId}>{children}</div>
     </AccordionContext.Provider>
   );
@@ -27,8 +48,8 @@ const Item = ({ index, children, ...props }) => {
 };
 
 export const Header = ({ index, children, ...props }) => {
-  const { openIndex, toggleItem } = useContext(AccordionContext);
-  const isOpen = openIndex === index;
+  const { isItemOpen, toggleItem } = useContext(AccordionContext);
+  const isOpen = isItemOpen(index);
 
   return (
     <AccordionHeader onClick={() => toggleItem(index)} {...props} className={isOpen ? 'open' : ''}>
@@ -46,8 +67,8 @@ export const Header = ({ index, children, ...props }) => {
 };
 
 const Content = ({ index, children, ...props }) => {
-  const { openIndex } = useContext(AccordionContext);
-  const isOpen = openIndex === index;
+  const { isItemOpen } = useContext(AccordionContext);
+  const isOpen = isItemOpen(index);
 
   return (
     <AccordionContent isOpen={isOpen} {...props}>

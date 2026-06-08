@@ -30,9 +30,8 @@ const StyledWrapper = styled.div`
   .change-item {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 0.375rem 1rem;
-    font-size: ${(props) => props.theme.font.size.sm};
+    padding: 0.2rem 0.5rem;
+    font-size: ${(props) => props.theme.font.size.xs};
     cursor: pointer;
     position: relative;
     border-left: 2px solid transparent;
@@ -52,8 +51,10 @@ const StyledWrapper = styled.div`
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 200px;
-    font-size: ${(props) => props.theme.font.size.sm};
+    flex: 1;
+    min-width: 0;
+    padding-right: 3.5rem;
+    font-size: ${(props) => props.theme.font.size.xs};
     color: ${(props) => props.theme.colors.text.subtext2};
   }
 
@@ -69,12 +70,15 @@ const StyledWrapper = styled.div`
   }
 
   .status-badge {
+    position: absolute;
+    right: 0.5rem;
     font-size: ${(props) => props.theme.font.size.xs};
     font-weight: bold;
     padding: 0px 4px;
     border-radius: ${(props) => props.theme.border.radius.sm};
     text-align: center;
     min-width: 16px;
+    flex-shrink: 0;
 
     &.added {
       background-color: ${(props) => props.theme.status.success.background};
@@ -90,6 +94,23 @@ const StyledWrapper = styled.div`
       background-color: ${(props) => props.theme.status.warning.background};
       color: ${(props) => props.theme.status.warning.text};
     }
+  }
+
+  .change-actions {
+    display: none;
+    position: absolute;
+    right: 0.5rem;
+    align-items: center;
+    gap: 0.25rem;
+    flex-shrink: 0;
+  }
+
+  .change-item:hover .change-actions {
+    display: flex;
+  }
+
+  .change-item:hover .status-badge {
+    display: none;
   }
 `;
 

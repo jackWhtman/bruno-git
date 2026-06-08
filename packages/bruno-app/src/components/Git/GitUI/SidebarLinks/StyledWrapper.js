@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
 const StyledWrapper = styled.div`
-  padding: 0.5rem 1rem;
+  padding: 0.25rem 0.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -11,8 +11,8 @@ const StyledWrapper = styled.div`
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-size: ${(props) => props.theme.font.size.sm};
-    padding: 0.375rem 0.5rem;
+    font-size: ${(props) => props.theme.font.size.xs};
+    padding: 0.25rem 0.5rem;
     border-radius: ${(props) => props.theme.border.radius.sm};
     cursor: pointer;
     transition: all 0.15s ease;

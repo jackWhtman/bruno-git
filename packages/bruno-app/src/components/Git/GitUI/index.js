@@ -5,6 +5,8 @@ import { updateCollectionGitData } from 'providers/ReduxStore/slices/collections
 import toast from 'react-hot-toast';
 import Sidebar from 'components/Sidebar';
 import Accordion from 'components/Accordion';
+import Portal from 'components/Portal';
+import Modal from 'components/Modal';
 import MenuDropdown from 'ui/MenuDropdown';
 import Button from 'ui/Button';
 import ToolHint from 'components/ToolHint';
@@ -40,6 +42,25 @@ const GitUI = ({ collection }) => {
 
   const [activeView, setActiveView] = useState('overview');
   const [stashes, setStashes] = useState([]);
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: 'Confirm',
+    confirmButtonColor: 'primary',
+    onConfirm: null
+  });
+
+  const showConfirm = ({ title, message, confirmText = 'Confirm', confirmButtonColor = 'primary', onConfirm }) => {
+    setConfirmModal({
+      isOpen: true,
+      title,
+      message,
+      confirmText,
+      confirmButtonColor,
+      onConfirm
+    });
+  };
   const [remotes, setRemotes] = useState([]);
   const [showCreateBranchModal, setShowCreateBranchModal] = useState(false);
 
@@ -229,39 +250,51 @@ const GitUI = ({ collection }) => {
   };
 
   const handleDiscardFile = async (filePath) => {
-    const confirm = window.confirm('Are you sure you want to discard all changes in this file? This action cannot be undone.');
-    if (!confirm) return;
-    try {
-      setIsPerformingGitAction(true);
-      await window.ipcRenderer.invoke('renderer:git:discard-changes', collection.pathname, [filePath]);
-      toast.success('Discarded changes');
-      await refreshGitStatus();
-      if (selectedFile?.path === filePath) {
-        setSelectedFile(null);
+    showConfirm({
+      title: 'Discard Changes',
+      message: 'Are you sure you want to discard all changes in this file? This action cannot be undone.',
+      confirmText: 'Discard',
+      confirmButtonColor: 'danger',
+      onConfirm: async () => {
+        try {
+          setIsPerformingGitAction(true);
+          await window.ipcRenderer.invoke('renderer:git:discard-changes', collection.pathname, [filePath]);
+          toast.success('Discarded changes');
+          await refreshGitStatus();
+          if (selectedFile?.path === filePath) {
+            setSelectedFile(null);
+          }
+        } catch (err) {
+          toast.error('Failed to discard changes');
+        } finally {
+          setIsPerformingGitAction(false);
+        }
       }
-    } catch (err) {
-      toast.error('Failed to discard changes');
-    } finally {
-      setIsPerformingGitAction(false);
-    }
+    });
   };
 
   const handleDiscardAll = async () => {
     const filesToDiscard = changedFiles.unstaged.map((f) => f.path);
     if (!filesToDiscard.length) return;
-    const confirm = window.confirm(`Are you sure you want to discard changes in all ${filesToDiscard.length} files? This action cannot be undone.`);
-    if (!confirm) return;
-    try {
-      setIsPerformingGitAction(true);
-      await window.ipcRenderer.invoke('renderer:git:discard-changes', collection.pathname, filesToDiscard);
-      toast.success('Discarded all changes');
-      await refreshGitStatus();
-      setSelectedFile(null);
-    } catch (err) {
-      toast.error('Failed to discard changes');
-    } finally {
-      setIsPerformingGitAction(false);
-    }
+    showConfirm({
+      title: 'Discard All Changes',
+      message: `Are you sure you want to discard changes in all ${filesToDiscard.length} files? This action cannot be undone.`,
+      confirmText: 'Discard All',
+      confirmButtonColor: 'danger',
+      onConfirm: async () => {
+        try {
+          setIsPerformingGitAction(true);
+          await window.ipcRenderer.invoke('renderer:git:discard-changes', collection.pathname, filesToDiscard);
+          toast.success('Discarded all changes');
+          await refreshGitStatus();
+          setSelectedFile(null);
+        } catch (err) {
+          toast.error('Failed to discard changes');
+        } finally {
+          setIsPerformingGitAction(false);
+        }
+      }
+    });
   };
 
   const handleCommit = async () => {
@@ -391,7 +424,7 @@ const GitUI = ({ collection }) => {
           />
 
           <div className="git-sidebar-scrollable">
-            <Accordion defaultIndex={1} dataTestId="git-sidebar-accordion">
+            <Accordion defaultIndex={[1, 2]} allowMultiple={true} dataTestId="git-sidebar-accordion">
               <Accordion.Item index={1}>
                 <Accordion.Header>
                   <div className="flex items-center gap-1.5">
@@ -521,6 +554,7 @@ const GitUI = ({ collection }) => {
             refreshGitStatus={refreshGitStatus}
             setIsPerformingGitAction={setIsPerformingGitAction}
             setActiveView={setActiveView}
+            showConfirm={showConfirm}
           />
         ) : activeView === 'remotes' ? (
           <RemotesPanel
@@ -543,6 +577,25 @@ const GitUI = ({ collection }) => {
           onClose={() => setShowCreateBranchModal(false)}
           onSubmit={handleCreateBranch}
         />
+      )}
+      {confirmModal.isOpen && (
+        <Portal>
+          <Modal
+            size="sm"
+            title={confirmModal.title}
+            confirmText={confirmModal.confirmText}
+            confirmButtonColor={confirmModal.confirmButtonColor}
+            handleCancel={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+            handleConfirm={() => {
+              if (confirmModal.onConfirm) {
+                confirmModal.onConfirm();
+              }
+              setConfirmModal({ ...confirmModal, isOpen: false });
+            }}
+          >
+            <div className="text-sm">{confirmModal.message}</div>
+          </Modal>
+        </Portal>
       )}
     </StyledWrapper>
   );

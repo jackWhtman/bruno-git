@@ -31,7 +31,7 @@ const OverviewPanel = ({
 
   return (
     <StyledWrapper className="empty-state-container">
-      <div className="opacity-80 mb-4" style={{ color: theme.brand }}>
+      <div className="opacity-80 mb-4 flex flex-col items-center " style={{ color: theme.brand }}>
         <IconBrandGit size={72} strokeWidth={1} />
         <div className="mt-2 text-sm font-medium">Perform git actions or open files from sidebar to view</div>
       </div>

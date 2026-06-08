@@ -59,11 +59,9 @@ const StyledWrapper = styled.div`
       
       /* Target AccordionHeader button */
       > button {
-        padding: 0.625rem 1rem;
-        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        font-size: 11px;
         font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
         color: ${(props) => props.theme.sidebar?.muted || '#888'};
         display: flex;
         align-items: center;
@@ -87,9 +85,9 @@ const StyledWrapper = styled.div`
         }
         
         .count-badge {
-          padding: 2px 6px;
+          padding: 1px 5px;
           border-radius: 9999px;
-          font-size: ${(props) => props.theme.font?.size?.xs || '10px'};
+          font-size: 9px;
           font-weight: 500;
           margin-left: 0.25rem;
           background-color: ${(props) => props.theme.background?.crust || '#111'};
@@ -99,8 +97,8 @@ const StyledWrapper = styled.div`
         }
         
         svg {
-          width: 14px;
-          height: 14px;
+          width: 12px;
+          height: 12px;
           flex-shrink: 0;
         }
       }
@@ -132,7 +130,7 @@ const StyledWrapper = styled.div`
   }
 
   .git-branch-bottom {
-    padding: 0.75rem 1rem;
+    padding: 0.5rem 0.75rem;
     background-color: ${(props) => props.theme.background?.crust || '#111'};
     border-top: 1px solid ${(props) => props.theme.border?.border1 || '#333'};
     display: flex;

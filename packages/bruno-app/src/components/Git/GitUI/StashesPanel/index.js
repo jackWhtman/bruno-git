@@ -10,7 +10,8 @@ const StashesPanel = ({
   collection,
   refreshGitStatus,
   setIsPerformingGitAction,
-  setActiveView
+  setActiveView,
+  showConfirm
 }) => {
   return (
     <StyledWrapper className="git-view-container">
@@ -66,20 +67,26 @@ const StashesPanel = ({
                     variant="outline"
                     color="danger"
                     size="xs"
-                    onClick={async () => {
-                      const confirm = window.confirm('Are you sure you want to drop this stash?');
-                      if (!confirm) return;
-                      try {
-                        setIsPerformingGitAction(true);
-                        await window.ipcRenderer.invoke('renderer:git:drop-stash', collection.pathname, stash.index);
-                        toast.success('Stash dropped successfully');
-                        const res = await window.ipcRenderer.invoke('renderer:git:list-stashes', collection.pathname);
-                        setStashes(res || []);
-                      } catch (err) {
-                        toast.error(err.message || 'Failed to drop stash');
-                      } finally {
-                        setIsPerformingGitAction(false);
-                      }
+                    onClick={() => {
+                      showConfirm({
+                        title: 'Drop Stash',
+                        message: 'Are you sure you want to drop this stash?',
+                        confirmText: 'Drop',
+                        confirmButtonColor: 'danger',
+                        onConfirm: async () => {
+                          try {
+                            setIsPerformingGitAction(true);
+                            await window.ipcRenderer.invoke('renderer:git:drop-stash', collection.pathname, stash.index);
+                            toast.success('Stash dropped successfully');
+                            const res = await window.ipcRenderer.invoke('renderer:git:list-stashes', collection.pathname);
+                            setStashes(res || []);
+                          } catch (err) {
+                            toast.error(err.message || 'Failed to drop stash');
+                          } finally {
+                            setIsPerformingGitAction(false);
+                          }
+                        }
+                      });
                     }}
                   >
                     Drop

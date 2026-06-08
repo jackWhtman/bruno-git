@@ -39,11 +39,11 @@ const ChangesList = ({
             return (
               <div
                 key={`staged-${file.path}`}
-                className={`group change-item ${isSelected ? 'selected' : ''}`}
+                className={`change-item ${isSelected ? 'selected' : ''}`}
                 onClick={() => setSelectedFile({ path: file.path, type: 'staged' })}
               >
                 <span className="file-path" title={file.path}>{file.path}</span>
-                <div className="hidden group-hover:flex items-center gap-2">
+                <div className="change-actions">
                   <ActionIcon
                     label="Unstage file"
                     onClick={(e) => {
@@ -94,11 +94,11 @@ const ChangesList = ({
           return (
             <div
               key={`unstaged-${file.path}`}
-              className={`group change-item ${isSelected ? 'selected' : ''}`}
+              className={`change-item ${isSelected ? 'selected' : ''}`}
               onClick={() => setSelectedFile({ path: file.path, type: 'unstaged' })}
             >
               <span className="file-path" title={file.path}>{file.path}</span>
-              <div className="hidden group-hover:flex items-center gap-2">
+              <div className="change-actions">
                 <ActionIcon
                   label="Discard changes"
                   onClick={(e) => {
