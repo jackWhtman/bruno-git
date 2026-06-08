@@ -23,17 +23,112 @@ const StyledWrapper = styled.div`
     display: flex;
     flex-direction: column;
     min-height: 0;
-    overflow: hidden;
+    overflow-y: auto;
   }
 
-  .section-header .count-badge {
-    padding: 2px 8px;
-    border-radius: 9999px;
-    font-size: ${(props) => props.theme.font?.size?.xs || '10px'};
-    font-weight: 500;
-    margin-left: 0.25rem;
-    background-color: ${(props) => props.theme.background?.crust || '#111'};
-    color: ${(props) => props.theme.text || '#fff'};
+  /* Overrides for common Accordion component inside sidebar */
+  div[data-testid="git-sidebar-accordion"] {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    
+    > div {
+      /* Targets AccordionItem */
+      border: none;
+      border-radius: 0;
+      margin-bottom: 0;
+      border-bottom: 1px solid ${(props) => props.theme.border?.border1 || '#333'};
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      
+      &:not(:has(button.open)) {
+        flex: 0 0 auto;
+      }
+      
+      &:has(button.open) {
+        &:first-child {
+          flex: 1;
+          min-height: 0;
+        }
+        &:not(:first-child) {
+          flex: 0 0 auto;
+        }
+      }
+      
+      /* Target AccordionHeader button */
+      > button {
+        padding: 0.625rem 1rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: ${(props) => props.theme.sidebar?.muted || '#888'};
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: transparent;
+        border: none;
+        outline: none;
+        cursor: pointer;
+        width: 100%;
+        text-align: left;
+        
+        &:hover, &.open {
+          background-color: ${(props) => props.theme.background?.surface0 || '#222'};
+          color: ${(props) => props.theme.text || '#fff'};
+        }
+        
+        > div {
+          display: flex;
+          align-items: center;
+          width: 100%;
+        }
+        
+        .count-badge {
+          padding: 2px 6px;
+          border-radius: 9999px;
+          font-size: ${(props) => props.theme.font?.size?.xs || '10px'};
+          font-weight: 500;
+          margin-left: 0.25rem;
+          background-color: ${(props) => props.theme.background?.crust || '#111'};
+          color: ${(props) => props.theme.text || '#fff'};
+          text-transform: none;
+          letter-spacing: normal;
+        }
+        
+        svg {
+          width: 14px;
+          height: 14px;
+          flex-shrink: 0;
+        }
+      }
+      
+      /* Target AccordionContent div */
+      &:not(:has(button.open)) > div:last-child {
+        display: none !important;
+      }
+      
+      &:has(button.open) > div:last-child {
+        padding: 0 !important;
+        max-height: none !important;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        flex: 1;
+        
+        .changes-list {
+          flex: 1;
+          overflow-y: auto;
+        }
+      }
+    }
+    
+    /* Bottom pin Links section when Changes is collapsed */
+    > div:first-child:not(:has(button.open)) + div {
+      margin-top: auto !important;
+    }
   }
 
   .git-branch-bottom {

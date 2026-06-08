@@ -27,7 +27,7 @@ const SIDEBAR_SECTIONS = [
   }
 ];
 
-const Sidebar = ({ children, defaultExpanded = ['collections'] }) => {
+const Sidebar = ({ children }) => {
   const leftSidebarWidth = useSelector((state) => state.app.leftSidebarWidth);
   const sidebarCollapsed = useSelector((state) => state.app.sidebarCollapsed);
   const [asideWidth, setAsideWidth] = useState(leftSidebarWidth);
@@ -106,7 +106,7 @@ const Sidebar = ({ children, defaultExpanded = ['collections'] }) => {
   }, [leftSidebarWidth]);
 
   return (
-    <SidebarAccordionProvider defaultExpanded={defaultExpanded}>
+    <SidebarAccordionProvider defaultExpanded={['collections']}>
       <StyledWrapper className="flex relative h-full">
         <aside
           className="sidebar"

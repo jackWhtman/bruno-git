@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { IconLoader2, IconArrowUp, IconArrowDown, IconGitBranch, IconChevronDown } from '@tabler/icons';
+import { IconLoader2, IconArrowUp, IconArrowDown, IconGitBranch, IconChevronDown, IconChevronRight } from '@tabler/icons';
 import { updateCollectionGitData } from 'providers/ReduxStore/slices/collections';
 import toast from 'react-hot-toast';
 import Sidebar from 'components/Sidebar';
-import SidebarSection from 'components/Sidebar/SidebarSection';
+import Accordion from 'components/Accordion';
 import MenuDropdown from 'ui/MenuDropdown';
 import Button from 'ui/Button';
+import ToolHint from 'components/ToolHint';
 import { useTheme } from 'providers/Theme';
 import StyledWrapper from './StyledWrapper';
 
@@ -379,7 +380,7 @@ const GitUI = ({ collection }) => {
   return (
     <StyledWrapper>
       {/* Git Sidebar Panel */}
-      <Sidebar defaultExpanded={['git-changes']}>
+      <Sidebar>
         <div className="git-sidebar-container">
           <CommitArea
             commitMessage={commitMessage}
@@ -390,39 +391,43 @@ const GitUI = ({ collection }) => {
           />
 
           <div className="git-sidebar-scrollable">
-            <SidebarSection
-              id="git-changes"
-              title={(
-                <div className="flex items-center gap-1.5">
-                  <span>Changes</span>
-                  <span className="count-badge">{(changedFiles.staged?.length || 0) + (changedFiles.unstaged?.length || 0)}</span>
-                </div>
-              )}
-            >
-              <ChangesList
-                changedFiles={changedFiles}
-                selectedFile={selectedFile}
-                setSelectedFile={setSelectedFile}
-                handleUnstageAll={handleUnstageAll}
-                handleUnstageFile={handleUnstageFile}
-                handleDiscardAll={handleDiscardAll}
-                handleDiscardFile={handleDiscardFile}
-                handleStageAll={handleStageAll}
-                handleStageFile={handleStageFile}
-              />
-            </SidebarSection>
+            <Accordion defaultIndex={1} dataTestId="git-sidebar-accordion">
+              <Accordion.Item index={1}>
+                <Accordion.Header>
+                  <div className="flex items-center gap-1.5">
+                    <span>Changes</span>
+                    <span className="count-badge">{(changedFiles.staged?.length || 0) + (changedFiles.unstaged?.length || 0)}</span>
+                  </div>
+                </Accordion.Header>
+                <Accordion.Content>
+                  <ChangesList
+                    changedFiles={changedFiles}
+                    selectedFile={selectedFile}
+                    setSelectedFile={setSelectedFile}
+                    handleUnstageAll={handleUnstageAll}
+                    handleUnstageFile={handleUnstageFile}
+                    handleDiscardAll={handleDiscardAll}
+                    handleDiscardFile={handleDiscardFile}
+                    handleStageAll={handleStageAll}
+                    handleStageFile={handleStageFile}
+                  />
+                </Accordion.Content>
+              </Accordion.Item>
 
-            <SidebarSection
-              id="git-links"
-              title="Links"
-            >
-              <SidebarLinks
-                selectedFile={selectedFile}
-                setSelectedFile={setSelectedFile}
-                activeView={activeView}
-                setActiveView={setActiveView}
-              />
-            </SidebarSection>
+              <Accordion.Item index={2}>
+                <Accordion.Header>
+                  <span>Links</span>
+                </Accordion.Header>
+                <Accordion.Content>
+                  <SidebarLinks
+                    selectedFile={selectedFile}
+                    setSelectedFile={setSelectedFile}
+                    activeView={activeView}
+                    setActiveView={setActiveView}
+                  />
+                </Accordion.Content>
+              </Accordion.Item>
+            </Accordion>
           </div>
 
           {gitData.branches && (
@@ -467,14 +472,18 @@ const GitUI = ({ collection }) => {
               </div>
 
               <div className="git-ahead-behind-indicators">
-                <div className={`git-indicator-item ahead ${aheadBehind.ahead > 0 ? 'active' : 'zero'}`} title={`${aheadBehind.ahead} commits ahead`}>
-                  <IconArrowUp size={14} />
-                  <span>{aheadBehind.ahead || 0}</span>
-                </div>
-                <div className={`git-indicator-item behind ${aheadBehind.behind > 0 ? 'active' : 'zero'}`} title={`${aheadBehind.behind} commits behind`}>
-                  <IconArrowDown size={14} />
-                  <span>{aheadBehind.behind || 0}</span>
-                </div>
+                <ToolHint text={`${aheadBehind.ahead} commit${aheadBehind.ahead === 1 ? '' : 's'} ahead`} toolhintId="git-ahead-tooltip" place="top">
+                  <div className={`git-indicator-item ahead ${aheadBehind.ahead > 0 ? 'active' : 'zero'}`}>
+                    <IconArrowUp size={14} />
+                    <span>{aheadBehind.ahead || 0}</span>
+                  </div>
+                </ToolHint>
+                <ToolHint text={`${aheadBehind.behind} commit${aheadBehind.behind === 1 ? '' : 's'} behind`} toolhintId="git-behind-tooltip" place="top">
+                  <div className={`git-indicator-item behind ${aheadBehind.behind > 0 ? 'active' : 'zero'}`}>
+                    <IconArrowDown size={14} />
+                    <span>{aheadBehind.behind || 0}</span>
+                  </div>
+                </ToolHint>
               </div>
             </div>
           )}
